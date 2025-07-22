@@ -2,7 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
 import admin from 'firebase-admin';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import 'dotenv/config';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // メール配信サービス設定
 const EMAIL_SERVICE_CONFIG = {
@@ -55,6 +60,25 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// セキュリティヘッダーの設定
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// 静的ファイルの配信設定
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// デバッグ用ログ
+console.log('📁 静的ファイルパス:', path.join(__dirname, '../dist'));
+console.log('🔍 静的ファイル存在確認:', require('fs').existsSync(path.join(__dirname, '../dist/index.html')));
+
+// APIルートのプレフィックス
+app.use('/api', cors());
 
 // JWT認証ミドルウェア
 const authenticateUser = async (req, res, next) => {
@@ -826,6 +850,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// SPAのルーティング - API以外のすべてのGETリクエストをindex.htmlにリダイレクト
+app.get('*', (req, res) => {
+  // APIルートは除外
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // 静的ファイルが存在する場合はそれを返す
+  const filePath = path.join(__dirname, '../dist', req.path);
+  if (require('fs').existsSync(filePath) && require('fs').statSync(filePath).isFile()) {
+    return res.sendFile(filePath);
+  }
+  
+  // それ以外はindex.htmlを返す（SPAルーティング）
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Frontend served from: ${path.join(__dirname, '../dist')}`);
 });

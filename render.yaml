@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: motetalk-backend
+    name: motetalk-app
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: node server/index.js
     envVars:
       - key: NODE_ENV
@@ -15,15 +15,6 @@ services:
         sync: false
       - key: FIREBASE_PRIVATE_KEY
         sync: false
-      - key: PORT
-        value: 10000
-
-  - type: web
-    name: motetalk-frontend
-    env: static
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    envVars:
       - key: VITE_GEMINI_API_KEY
         sync: false
       - key: VITE_STRIPE_PUBLISHABLE_KEY
@@ -41,4 +32,6 @@ services:
       - key: VITE_FIREBASE_APP_ID
         sync: false
       - key: VITE_APP_URL
-        value: https://motetalk-frontend.onrender.com 
+        sync: false
+      - key: PORT
+        value: 10000 

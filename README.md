@@ -51,15 +51,12 @@ VITE_APP_URL=http://localhost:5173
 #### Render用
 Renderのダッシュボードで以下の環境変数を設定してください：
 
-**バックエンドサービス用:**
+**単一Webサービス用:**
 - `NODE_ENV`: production
 - `STRIPE_SECRET_KEY`: your_stripe_secret_key
 - `FIREBASE_PROJECT_ID`: your_project_id
 - `FIREBASE_CLIENT_EMAIL`: your_service_account_email
 - `FIREBASE_PRIVATE_KEY`: your_private_key
-- `PORT`: 10000
-
-**フロントエンドサービス用:**
 - `VITE_GEMINI_API_KEY`: your_gemini_api_key
 - `VITE_STRIPE_PUBLISHABLE_KEY`: your_stripe_publishable_key
 - `VITE_FIREBASE_API_KEY`: your_firebase_api_key
@@ -68,7 +65,7 @@ Renderのダッシュボードで以下の環境変数を設定してくださ�
 - `VITE_FIREBASE_STORAGE_BUCKET`: your_project_id.appspot.com
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`: your_messaging_sender_id
 - `VITE_FIREBASE_APP_ID`: your_firebase_app_id
-- `VITE_APP_URL`: https://your-frontend-service.onrender.com
+- `VITE_APP_URL`: https://your-app-name.onrender.com
 
 ### 3. APIキーの取得方法
 
@@ -122,13 +119,36 @@ npm run dev:full
 
 2. **Renderでサービス作成**
    - [Render Dashboard](https://dashboard.render.com/)にアクセス
-   - 「New +」→「Blueprint」を選択
+   - 「New +」→「Web Service」を選択
    - GitHubリポジトリを接続
-   - `render.yaml`ファイルを自動検出してデプロイ
+   - 以下の設定を行う：
+     - **Name**: motetalk-app
+     - **Environment**: Node
+     - **Build Command**: `npm install && npm run build`
+     - **Start Command**: `node server/index.js`
+
+**設定の説明:**
+- **Build Command**: 依存関係のインストールとフロントエンドのビルド(npm install; npm run build)
+- **Start Command**: Express.jsサーバーの起動（フロントエンドとバックエンドを統合配信）(node server/index.js)
 
 3. **環境変数の設定**
-   - バックエンドサービスで上記のバックエンド用環境変数を設定
-   - フロントエンドサービスで上記のフロントエンド用環境変数を設定
+   - Renderダッシュボードの「Environment」タブで以下を設定：
+     - `NODE_ENV`: production
+     - `STRIPE_SECRET_KEY`: your_stripe_secret_key
+     - `FIREBASE_PROJECT_ID`: your_project_id
+     - `FIREBASE_CLIENT_EMAIL`: your_service_account_email
+     - `FIREBASE_PRIVATE_KEY`: your_private_key
+     - `VITE_GEMINI_API_KEY`: your_gemini_api_key
+     - `VITE_STRIPE_PUBLISHABLE_KEY`: your_stripe_publishable_key
+     - `VITE_FIREBASE_API_KEY`: your_firebase_api_key
+     - `VITE_FIREBASE_AUTH_DOMAIN`: your_project_id.firebaseapp.com
+     - `VITE_FIREBASE_PROJECT_ID`: your_project_id
+     - `VITE_FIREBASE_STORAGE_BUCKET`: your_project_id.appspot.com
+     - `VITE_FIREBASE_MESSAGING_SENDER_ID`: your_messaging_sender_id
+     - `VITE_FIREBASE_APP_ID`: your_firebase_app_id
+     - `VITE_APP_URL`: https://your-app-name.onrender.com
+
+**注意**: 無料インスタンスは15分間アクセスがないとスリープします。本番環境では有料プランの使用を推奨します。
 
 ## 🧪 開発環境でのテスト
 
