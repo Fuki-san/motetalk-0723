@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import admin from 'firebase-admin';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -75,7 +76,7 @@ app.use(express.static(path.join(__dirname, '../dist')));
 
 // デバッグ用ログ
 console.log('📁 静的ファイルパス:', path.join(__dirname, '../dist'));
-console.log('🔍 静的ファイル存在確認:', require('fs').existsSync(path.join(__dirname, '../dist/index.html')));
+console.log('🔍 静的ファイル存在確認:', fs.existsSync(path.join(__dirname, '../dist/index.html')));
 
 // APIルートのプレフィックス
 app.use('/api', cors());
@@ -859,7 +860,7 @@ app.get('*', (req, res) => {
   
   // 静的ファイルが存在する場合はそれを返す
   const filePath = path.join(__dirname, '../dist', req.path);
-  if (require('fs').existsSync(filePath) && require('fs').statSync(filePath).isFile()) {
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
   
