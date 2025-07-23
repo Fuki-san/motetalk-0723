@@ -393,17 +393,26 @@ app.post('/api/user-settings', authenticateUser, requireAuth, async (req, res) =
 // 使用回数制限チェックAPI
 app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
   try {
+    console.log('🔍 Usage limit check request:', {
+      userId: req.user.uid,
+      email: req.user.email,
+      dbInitialized: !!db
+    });
+
     const userId = req.user.uid;
     
     if (!db) {
+      console.error('❌ Database not available');
       return res.status(500).json({ error: 'Database not available' });
     }
     
     // ユーザー情報を取得
     const userDoc = await db.collection('users').doc(userId).get();
+    console.log('📄 User document exists:', userDoc.exists);
     
     if (!userDoc.exists) {
       // 新規ユーザーの場合、初期データを作成
+      console.log('🆕 Creating new user:', userId);
       await db.collection('users').doc(userId).set({
         uid: userId,
         email: req.user.email,
@@ -415,6 +424,7 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
       
+      console.log('✅ New user created successfully');
       return res.json({
         canUse: true,
         remainingUses: 3,
@@ -424,11 +434,18 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
     }
     
     const userData = userDoc.data();
+    console.log('📊 User data:', {
+      plan: userData.plan,
+      monthlyUsage: userData.monthlyUsage,
+      lastUsageReset: userData.lastUsageReset
+    });
+
     const currentDate = new Date();
     const lastReset = userData.lastUsageReset?.toDate() || new Date(0);
     
     // 月が変わった場合、使用回数をリセット
     if (currentDate.getMonth() !== lastReset.getMonth() || currentDate.getFullYear() !== lastReset.getFullYear()) {
+      console.log('🔄 Resetting monthly usage for new month');
       await db.collection('users').doc(userId).update({
         monthlyUsage: 0,
         lastUsageReset: currentDate,
@@ -448,15 +465,23 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
     const currentUsage = userData.monthlyUsage || 0;
     const canUse = maxUses === -1 || currentUsage < maxUses;
     
-    res.json({
+    const result = {
       canUse,
       remainingUses: maxUses === -1 ? -1 : Math.max(0, maxUses - currentUsage),
       totalUses: maxUses,
       plan: userData.plan
-    });
+    };
+    
+    console.log('✅ Usage limit check result:', result);
+    res.json(result);
     
   } catch (error) {
-    console.error('Usage limit check error:', error);
+    console.error('❌ Usage limit check error:', error);
+    console.error('📝 Error details:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?.uid
+    });
     res.status(500).json({ error: error.message });
   }
 });
@@ -890,7 +915,19 @@ app.use((req, res) => {
   }
 });
 
+// グローバルエラーハンドラー
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Frontend served from: ${path.join(__dirname, '../dist')}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📁 Frontend served from: ${path.join(__dirname, '../dist')}`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
+  console.log(`📊 Firebase Admin initialized: ${admin.apps.length > 0}`);
+  console.log(`🗄️ Firestore initialized: ${!!db}`);
 });
