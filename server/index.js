@@ -878,9 +878,13 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-// 404エラーハンドラー - APIルートが見つからない場合
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: 'API endpoint not found' });
+// 404エラーハンドラー - すべてのリクエストを処理
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({ error: 'API endpoint not found' });
+  } else {
+    res.status(404).send('Not Found');
+  }
 });
 
 app.listen(PORT, () => {
