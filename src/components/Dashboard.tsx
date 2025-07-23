@@ -284,9 +284,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">AI会話アシスタント</h1>
           <p className="text-gray-600">連続対話で自然な会話の流れをサポート</p>
           
-          {/* 会話履歴機能ボタン（有料ユーザーのみ） */}
-          {usageLimit && usageLimit.plan === 'premium' && (
+          {/* プレミアムユーザー向け機能ボタン */}
+          {usageLimit && usageLimit.isPremium && (
             <div className="flex justify-center space-x-4 mt-4">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg">
+                <Crown className="w-4 h-4" />
+                <span>プレミアムプラン</span>
+              </div>
               <button
                 onClick={() => {
                   loadConversationHistory();
@@ -311,7 +315,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
         </div>
         {usageLimit && !usageLoading && (
           <div className={`border rounded-lg p-4 mb-6 ${
-            usageLimit.plan === 'premium' 
+            usageLimit.isPremium 
               ? 'bg-purple-50 border-purple-200' 
               : usageLimit.remainingUses === 0
               ? 'bg-red-50 border-red-200'
@@ -321,13 +325,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                {usageLimit.plan === 'premium' ? (
+                {usageLimit.isPremium ? (
                   <Crown className="w-5 h-5 text-purple-600" />
                 ) : (
                   <AlertTriangle className="w-5 h-5 text-blue-600" />
                 )}
                 <span className={`text-sm ${
-                  usageLimit.plan === 'premium' 
+                  usageLimit.isPremium 
                     ? 'text-purple-800' 
                     : usageLimit.remainingUses === 0
                     ? 'text-red-800'
@@ -338,9 +342,9 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                   {getUsageDisplayText(usageLimit)}
                 </span>
               </div>
-              {usageLimit.plan === 'free' && usageLimit.remainingUses === 0 && (
+              {!usageLimit.isPremium && usageLimit.remainingUses === 0 && (
                 <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'pricing' }))}
+                  onClick={() => window.location.href = '/pricing'}
                   className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
                 >
                   <Crown className="w-4 h-4" />
@@ -599,29 +603,9 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
         )}
         {!isLoading && currentReplies.length === 0 && inputMessage.trim() === '' && conversation.length === 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <MessageCircle className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">自然な会話の流れを作りましょう</h3>
-            <p className="text-gray-600 mb-6">相手からのメッセージを入力すると、AIが文脈を理解して自然な返信を3つ提案します。<br />返信を選択・編集・送信後、相手の次のメッセージも入力すれば連続的な会話サポートが可能です。</p>
-            <div className="flex justify-center space-x-6 text-sm text-gray-500 mb-8">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>文脈理解</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>編集可能</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span>連続対話</span>
-              </div>
-            </div>
-            
             {/* 無料ユーザー向けCTA */}
             {usageLimit && usageLimit.plan === 'free' && (
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6 mt-8">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
                 <div className="flex items-center justify-center mb-4">
                   <Crown className="w-6 h-6 text-purple-600 mr-2" />
                   <h4 className="text-lg font-semibold text-gray-800">プレミアムプランでさらに快適に</h4>

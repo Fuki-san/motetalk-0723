@@ -565,7 +565,8 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
         canUse,
         remainingUses: maxUses === -1 ? -1 : Math.max(0, maxUses - currentUsage),
         totalUses: maxUses,
-        plan: userData.plan
+        plan: userData.plan,
+        isPremium: userData.plan === 'premium'
       };
       
       res.json(result);

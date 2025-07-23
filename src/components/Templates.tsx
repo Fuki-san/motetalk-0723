@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Heart, Coffee, Star, Crown, Copy, Lock, ShoppingBag, Check } from 'lucide-react';
-import { purchaseTemplate, templatePacks as stripeTemplatePacks, checkTemplatePurchaseStatus } from '../services/stripeService';
+import { purchaseTemplate, checkTemplatePurchaseStatus } from '../services/stripeService';
 import { useAuth } from '../hooks/useAuth';
 import { useUserData } from '../hooks/useUserData';
 
 interface Template {
   id: string;
-  title: string;
   content: string;
   category: string;
   isPreview?: boolean; // プレビュー用テンプレートかどうか
@@ -203,6 +202,15 @@ const Templates = () => {
 
     try {
       await purchaseTemplate(categoryId);
+      // 購入後、購入済みテンプレートリストを更新
+      const status = await checkTemplatePurchaseStatus();
+      setPurchasedTemplates(status.purchasedTemplates || []);
+      setIsPremiumUser(status.isPremiumUser || false);
+      
+      // 購入済みモードに切り替え
+      setViewMode('purchased');
+      
+      alert('テンプレートの購入が完了しました！購入済みテンプレートでご確認いただけます。');
     } catch (error) {
       console.error('Template purchase error:', error);
       alert('テンプレート購入の処理中にエラーが発生しました。');
@@ -396,7 +404,7 @@ const Templates = () => {
                   onClick={() => handlePurchase(selectedCategory)}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
                 >
-                  ¥{currentCategory.price.toLocaleString()} で購入して全てのテンプレートを見る
+                  ¥{currentCategory?.price.toLocaleString()} で購入して全てのテンプレートを見る
                 </button>
               </div>
             </div>
