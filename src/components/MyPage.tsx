@@ -29,6 +29,10 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     );
   }
 
+  // 購入履歴を取得
+  const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const userData = {
     name: user?.name || userProfile?.name || 'ユーザー',
     email: user?.email || userProfile?.email || '',
@@ -36,10 +40,6 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     subscriptionStatus: userProfile?.subscriptionStatus,
     purchasedTemplates: userProfile?.purchasedTemplates || []
   };
-
-  // 購入履歴を取得
-  const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
