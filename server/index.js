@@ -1818,8 +1818,42 @@ app.get('/api/health', (req, res) => {
 
 // ルートパスの処理
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Build files not found. Please run npm run build first.');
+  }
 });
+
+// 静的ファイルの配信設定
+app.use(express.static(path.join(__dirname, '../dist'), {
+  setHeaders: (res, path) => {
+    // CSSファイルのMIMEタイプを設定
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+    // JSファイルのMIMEタイプを設定
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+    // SVGファイルのMIMEタイプを設定
+    if (path.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    }
+    // その他のファイルタイプ
+    if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    }
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    }
+    if (path.endsWith('.ico')) {
+      res.setHeader('Content-Type', 'image/x-icon');
+    }
+  },
+  maxAge: '1y' // キャッシュ設定
+}));
 
 // SPAのルーティング - その他のすべてのGETリクエストをindex.htmlにリダイレクト
 app.use((req, res, next) => {

@@ -22,6 +22,10 @@ export default defineConfig({
         assetFileNames: '[name]-[hash].[ext]',
       },
     },
+    // ビルド設定の改善
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
