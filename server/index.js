@@ -725,10 +725,9 @@ app.get('/api/conversations', authenticateUser, requireAuth, async (req, res) =>
         });
       }
       
-      // 会話履歴一覧を取得
+      // 会話履歴一覧を取得（インデックスエラー回避のためorderByを削除）
       const conversationsSnapshot = await db.collection('conversations')
         .where('userId', '==', userId)
-        .orderBy('updatedAt', 'desc')
         .get();
       
       const conversations = conversationsSnapshot.docs.map(doc => {
@@ -740,6 +739,11 @@ app.get('/api/conversations', authenticateUser, requireAuth, async (req, res) =>
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date()
         };
+      }).sort((a, b) => {
+        // updatedAtで降順ソート（新しい順）
+        const dateA = a.updatedAt || new Date(0);
+        const dateB = b.updatedAt || new Date(0);
+        return dateB.getTime() - dateA.getTime();
       });
       
       const result = { conversations };
