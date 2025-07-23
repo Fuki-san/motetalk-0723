@@ -30,6 +30,15 @@ const Templates = () => {
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // URLパラメータからviewモードを設定
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam === 'purchased') {
+      setViewMode('purchased');
+    }
+  }, []);
+
   // 購入済みテンプレートの状態を動的に取得
   useEffect(() => {
     const loadTemplatePurchaseStatus = async () => {
@@ -209,6 +218,11 @@ const Templates = () => {
       
       // 購入済みモードに切り替え
       setViewMode('purchased');
+      
+      // URLを更新して購入済みモードを反映
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('view', 'purchased');
+      window.history.pushState({}, '', newUrl.toString());
       
       alert('テンプレートの購入が完了しました！購入済みテンプレートでご確認いただけます。');
     } catch (error) {

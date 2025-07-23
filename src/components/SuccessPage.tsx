@@ -67,11 +67,14 @@ const SuccessPage = () => {
           
           {purchaseInfo?.type === 'template' && (
             <button
-              onClick={() => window.location.href = '/templates'}
-              className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-all duration-200"
+              onClick={() => {
+                // テンプレートページに遷移し、購入済みモードで表示
+                window.location.href = '/templates?view=purchased';
+              }}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-200"
             >
               <Crown className="w-4 h-4 inline mr-2" />
-              テンプレートを見る
+              購入済みテンプレートを見る
             </button>
           )}
         </div>

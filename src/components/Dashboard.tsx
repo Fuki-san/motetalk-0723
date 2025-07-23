@@ -345,7 +345,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
               {!usageLimit.isPremium && usageLimit.remainingUses === 0 && (
                 <button
                   onClick={() => window.location.href = '/pricing'}
-                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+                  className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
                 >
                   <Crown className="w-4 h-4" />
                   <span>アップグレード</span>
@@ -601,52 +601,50 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
             )}
           </div>
         )}
-        {!isLoading && currentReplies.length === 0 && inputMessage.trim() === '' && conversation.length === 0 && (
+        {/* 無料ユーザー向けCTA - 常に表示 */}
+        {usageLimit && usageLimit.plan === 'free' && (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            {/* 無料ユーザー向けCTA */}
-            {usageLimit && usageLimit.plan === 'free' && (
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
-                <div className="flex items-center justify-center mb-4">
-                  <Crown className="w-6 h-6 text-purple-600 mr-2" />
-                  <h4 className="text-lg font-semibold text-gray-800">プレミアムプランでさらに快適に</h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <MessageCircle className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <h5 className="font-medium text-gray-800 mb-1">無制限利用</h5>
-                    <p className="text-sm text-gray-600">月3回の制限なし</p>
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
+              <div className="flex items-center justify-center mb-4">
+                <Crown className="w-6 h-6 text-purple-600 mr-2" />
+                <h4 className="text-lg font-semibold text-gray-800">プレミアムプランでさらに快適に</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <MessageCircle className="w-6 h-6 text-purple-600" />
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <History className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <h5 className="font-medium text-gray-800 mb-1">会話履歴保存</h5>
-                    <p className="text-sm text-gray-600">過去の会話を管理</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Star className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h5 className="font-medium text-gray-800 mb-1">全テンプレート</h5>
-                    <p className="text-sm text-gray-600">120種類使い放題</p>
-                  </div>
+                  <h5 className="font-medium text-gray-800 mb-1">無制限利用</h5>
+                  <p className="text-sm text-gray-600">月3回の制限なし</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-3">
-                    <span className="font-semibold text-purple-600">今なら月額1,980円</span>で全ての機能が利用可能
-                  </p>
-                  <button
-                    onClick={() => window.location.href = '/pricing'}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
-                  >
-                    <Crown className="w-4 h-4 inline mr-2" />
-                    プレミアムプランにアップグレード
-                  </button>
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <History className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h5 className="font-medium text-gray-800 mb-1">会話履歴保存</h5>
+                  <p className="text-sm text-gray-600">過去の会話を管理</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Star className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h5 className="font-medium text-gray-800 mb-1">全テンプレート</h5>
+                  <p className="text-sm text-gray-600">120種類使い放題</p>
                 </div>
               </div>
-            )}
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-3">
+                  <span className="font-semibold text-purple-600">今なら月額1,980円</span>で全ての機能が利用可能
+                </p>
+                <button
+                  onClick={() => window.location.href = '/pricing'}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
+                >
+                  <Crown className="w-4 h-4 inline mr-2" />
+                  プレミアムプランにアップグレード
+                </button>
+              </div>
+            </div>
           </div>
         )}
         
