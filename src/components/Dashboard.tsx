@@ -68,6 +68,40 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     loadUsageLimit();
   }, [isAuthenticated, authUser]);
 
+  // ページがフォーカスされた時に使用回数を再取得
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isAuthenticated && authUser) {
+        loadUsageLimit();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isAuthenticated, authUser]);
+
+  const loadUsageLimit = async () => {
+    if (isAuthenticated && authUser) {
+      try {
+        setUsageLoading(true);
+        const limit = await checkUsageLimit();
+        setUsageLimit(limit);
+      } catch (error) {
+        setUsageLimit({
+          canUse: true,
+          remainingUses: 3,
+          totalUses: 3,
+          plan: 'free'
+        });
+      } finally {
+        setUsageLoading(false);
+      }
+    } else {
+      setUsageLimit(null);
+      setUsageLoading(false);
+    }
+  };
+
   const handleGenerateReplies = async () => {
     if (!inputMessage.trim()) return;
     if (usageLimit ? !usageLimit.canUse : false) {
@@ -79,11 +113,9 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     try {
       if (usageLimit && usageLimit.plan === 'free') {
         await incrementUsage();
-        setUsageLimit(prev => prev ? {
-          ...prev,
-          remainingUses: Math.max(0, prev.remainingUses - 1),
-          canUse: prev.remainingUses > 1
-        } : null);
+        // サーバーから最新の使用回数を取得
+        const updatedLimit = await checkUsageLimit();
+        setUsageLimit(updatedLimit);
       }
       const apiConversationHistory: ApiConversationTurn[] = conversation.map(turn => ({
         userMessage: turn.userMessage,

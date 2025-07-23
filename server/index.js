@@ -696,6 +696,54 @@ app.get('/api/conversations/:id', authenticateUser, requireAuth, async (req, res
   }
 });
 
+// アカウント削除API
+app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🗑️ アカウント削除リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザー情報を取得
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // ユーザーの会話履歴を削除
+      const conversationsSnapshot = await db.collection('conversations')
+        .where('userId', '==', userId)
+        .get();
+      
+      const deletePromises = conversationsSnapshot.docs.map(doc => doc.ref.delete());
+      await Promise.all(deletePromises);
+      
+      console.log('🗑️ 会話履歴削除完了:', conversationsSnapshot.docs.length, '件');
+      
+      // ユーザー情報を削除
+      await db.collection('users').doc(userId).delete();
+      
+      console.log('✅ アカウント削除成功');
+      res.json({ success: true, message: 'アカウントが正常に削除されました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
+    
+  } catch (error) {
+    console.error('❌ アカウント削除エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // 会話履歴削除API（有料ユーザーのみ）
 app.delete('/api/conversations/:id', authenticateUser, requireAuth, async (req, res) => {
   try {

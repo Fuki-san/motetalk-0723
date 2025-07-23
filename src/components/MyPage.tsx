@@ -94,16 +94,19 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
 
     setIsDeleting(true);
     try {
+      // 認証トークンを取得
+      const token = await authUser?.getIdToken();
+      if (!token) {
+        throw new Error('認証トークンが取得できません');
+      }
+
       // アカウント削除API呼び出し
       const response = await fetch('/api/delete-account', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          userId: authUser?.uid,
-          email: authUser?.email
-        }),
       });
 
       if (!response.ok) {
