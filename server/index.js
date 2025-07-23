@@ -42,20 +42,37 @@ try {
     console.error('❌ Firebase環境変数が不完全です');
     console.error('必要な変数: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
   } else {
+    // 既存のアプリをクリア
+    if (admin.apps.length > 0) {
+      admin.app().delete();
+    }
+    
+    // 新しいアプリを初期化
+    const serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    };
+    
+    console.log('🔍 Firebase Admin初期化設定:', {
+      projectId: serviceAccount.projectId,
+      clientEmail: serviceAccount.clientEmail,
+      privateKeyLength: serviceAccount.privateKey.length
+    });
+    
     admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-      })
+      credential: admin.credential.cert(serviceAccount),
+      projectId: process.env.FIREBASE_PROJECT_ID
     });
     
     db = admin.firestore();
+    
     console.log('✅ Firebase Admin SDK初期化完了');
   }
 } catch (error) {
   console.error('❌ Firebase Admin SDK初期化エラー:', error.message);
   console.error('📝 Firebase Console で Service Account キーを確認してください');
+  db = null;
 }
 
 
