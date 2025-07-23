@@ -1430,16 +1430,14 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
       return res.status(503).json({ error: 'Database not available' });
     }
 
-    // サブスクリプション履歴
+    // サブスクリプション履歴（インデックスエラー回避のためorderByを削除）
     const subscriptions = await db.collection('subscriptions')
       .where('userId', '==', userId)
-      .orderBy('createdAt', 'desc')
       .get();
 
-    // テンプレート購入履歴
+    // テンプレート購入履歴（インデックスエラー回避のためorderByを削除）
     const purchases = await db.collection('purchases')
       .where('userId', '==', userId)
-      .orderBy('purchasedAt', 'desc')
       .get();
 
     const subscriptionHistory = subscriptions.docs.map(doc => ({
@@ -1450,7 +1448,12 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
       amount: 1980,
       createdAt: doc.data().createdAt?.toDate(),
       ...doc.data()
-    }));
+    })).sort((a, b) => {
+      // createdAtで降順ソート（新しい順）
+      const dateA = a.createdAt || new Date(0);
+      const dateB = b.createdAt || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
 
     const purchaseHistory = purchases.docs.map(doc => ({
       id: doc.id,
@@ -1460,7 +1463,12 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
       amount: doc.data().amount,
       purchasedAt: doc.data().purchasedAt?.toDate(),
       ...doc.data()
-    }));
+    })).sort((a, b) => {
+      // purchasedAtで降順ソート（新しい順）
+      const dateA = a.purchasedAt || new Date(0);
+      const dateB = b.purchasedAt || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
 
     res.json({
       subscriptions: subscriptionHistory,

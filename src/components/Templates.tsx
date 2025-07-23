@@ -75,13 +75,16 @@ const Templates = () => {
   // 表示するテンプレートを取得
   const getDisplayTemplates = () => {
     if (viewMode === 'purchased') {
+      // 購入済みモード: 実際に購入したテンプレートのみ表示
       return templateCategories.filter(category => 
         purchasedTemplates.includes(category.id) || 
         (category.id === 'premium_pack' && isPremiumUser)
       );
     }
+    // ショップモード: 未購入のテンプレートを表示
     return templateCategories.filter(category => 
-      category.id !== 'premium_pack' || isPremiumUser
+      !purchasedTemplates.includes(category.id) && 
+      (category.id !== 'premium_pack' || isPremiumUser)
     );
   };
 
@@ -211,7 +214,7 @@ const Templates = () => {
                 {/* Templates Display */}
                 {purchasedTemplates.includes(selectedCategoryData.id) || 
                  (selectedCategoryData.id === 'premium_pack' && isPremiumUser) ? (
-                  // 購入済みテンプレート: 箇条書きで表示
+                  // 購入済みテンプレート: 箇条書きで表示（鍵なし）
                   <div className="bg-white rounded-2xl shadow-xl p-6">
                     <div className="flex items-center space-x-2 mb-4">
                       <Check className="w-5 h-5 text-green-500" />
