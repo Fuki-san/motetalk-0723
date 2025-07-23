@@ -1719,6 +1719,17 @@ async function handleTemplatePurchase(session) {
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
+        // 購入履歴も記録
+        await db.collection('purchases').add({
+          userId: userDoc.id,
+          type: 'template',
+          templateId: templateId,
+          templateName: getTemplateDisplayName(templateId),
+          amount: getTemplatePrice(templateId),
+          purchasedAt: admin.firestore.FieldValue.serverTimestamp(),
+          status: 'completed'
+        });
+        
         console.log('✅ テンプレート購入完了:', templateId, 'for user:', customerEmail);
         
         // 購入完了通知メール
@@ -1750,6 +1761,17 @@ function getTemplateDisplayName(templateId) {
     'conversation_topics_pack': '会話ネタパック'
   };
   return templateNames[templateId] || templateId;
+}
+
+// テンプレート価格を取得
+function getTemplatePrice(templateId) {
+  const templatePrices = {
+    'first_message_pack': 980,
+    'line_transition_pack': 1280,
+    'date_invitation_pack': 1980,
+    'conversation_topics_pack': 1980
+  };
+  return templatePrices[templateId] || 0;
 }
 
 

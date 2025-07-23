@@ -84,7 +84,7 @@ const Templates = () => {
           id: 'first_1',
           content: 'はじめまして！プロフィールを拝見して、[趣味]をされているのを見て親近感を感じました。僕も[関連する経験]をしていて、とても興味深いです。よろしければお話しさせていただけませんか？',
           category: 'first_message_pack',
-          isPreview: true // このテンプレートをプレビューとして表示
+          isPreview: true
         },
         {
           id: 'first_2',
@@ -106,12 +106,131 @@ const Templates = () => {
           content: '[地域名]にお住まいなんですね！僕も[関連する地域情報]で、親近感を感じました。もしよろしければ、地元のおすすめスポットなど教えていただけませんか？',
           category: 'first_message_pack',
         },
-        // 残りのテンプレートを追加
-        ...Array.from({ length: 25 }, (_, i) => ({
-          id: `first_${i + 6}`,
-          content: `こんにちは！プロフィールを拝見して、[具体的な内容${i + 6}]について興味を持ちました。僕も[関連する体験や興味]があり、ぜひお話しさせていただければと思います。よろしくお願いします。`,
+        {
+          id: 'first_6',
+          content: 'こんにちは！[映画・ドラマ]のファンなんですね。僕も同じ作品が好きで、特に[具体的なシーン]が印象的でした。お話しできればと思います！',
           category: 'first_message_pack',
-        }))
+        },
+        {
+          id: 'first_7',
+          content: 'はじめまして！[料理]がお好きなんですね。僕も料理が趣味で、特に[関連する料理]を作るのが好きです。レシピの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_8',
+          content: '[スポーツ]をされているんですね！僕も[関連するスポーツ]が好きで、よく観戦しています。お話しできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_9',
+          content: 'こんにちは！[音楽]がお好きなんですね。僕も同じジャンルが好きで、特に[アーティスト名]の曲をよく聴いています。音楽の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_10',
+          content: 'はじめまして！[旅行]がお好きなんですね。僕も旅行が好きで、特に[地域名]に行ったことがあります。旅行の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_11',
+          content: 'こんにちは！[ペット]を飼われているんですね。僕も[ペットの種類]が好きで、とても癒されます。ペットの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_12',
+          content: 'はじめまして！[読書]がお好きなんですね。僕も本を読むのが好きで、特に[ジャンル]の本をよく読みます。本の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_13',
+          content: 'こんにちは！[アート]に興味があるんですね。僕も[関連するアート]が好きで、よく美術館に行きます。アートの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_14',
+          content: 'はじめまして！[ゲーム]がお好きなんですね。僕もゲームが好きで、特に[ゲームジャンル]をよくプレイします。ゲームの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_15',
+          content: 'こんにちは！[ファッション]に興味があるんですね。僕も[関連するファッション]が好きで、よくショッピングに行きます。ファッションの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_16',
+          content: 'はじめまして！[カフェ]がお好きなんですね。僕もカフェ巡りが好きで、特に[地域名]のカフェをよく訪れます。カフェの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_17',
+          content: 'こんにちは！[映画]がお好きなんですね。僕も映画が好きで、特に[ジャンル]の映画をよく観ます。映画の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_18',
+          content: 'はじめまして！[写真]がお好きなんですね。僕も写真を撮るのが好きで、特に[被写体]をよく撮影します。写真の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_19',
+          content: 'こんにちは！[ヨガ]をされているんですね。僕も[関連する運動]が好きで、健康を意識しています。運動の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_20',
+          content: 'はじめまして！[ワイン]がお好きなんですね。僕もワインが好きで、特に[ワインの種類]をよく飲みます。ワインの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_21',
+          content: 'こんにちは！[ダンス]をされているんですね。僕も[関連するダンス]が好きで、音楽に合わせて踊るのが好きです。ダンスの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_22',
+          content: 'はじめまして！[アニメ]がお好きなんですね。僕もアニメが好きで、特に[ジャンル]のアニメをよく観ます。アニメの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_23',
+          content: 'こんにちは！[登山]がお好きなんですね。僕も自然が好きで、特に[山の名前]に登ったことがあります。登山の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_24',
+          content: 'はじめまして！[陶芸]をされているんですね。僕も[関連する手芸]が好きで、ものづくりが好きです。手芸の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_25',
+          content: 'こんにちは！[占い]に興味があるんですね。僕も[関連する占い]が好きで、よく占ってもらいます。占いの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_26',
+          content: 'はじめまして！[ボランティア]をされているんですね。僕も[関連する活動]に興味があり、社会貢献が好きです。ボランティアの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_27',
+          content: 'こんにちは！[外国語]を勉強されているんですね。僕も[言語名]を勉強していて、語学に興味があります。語学の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_28',
+          content: 'はじめまして！[投資]に興味があるんですね。僕も[関連する投資]に興味があり、資産運用を勉強しています。投資の話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_29',
+          content: 'こんにちは！[DIY]がお好きなんですね。僕も[関連するDIY]が好きで、ものづくりが好きです。DIYの話などできればと思います。',
+          category: 'first_message_pack',
+        },
+        {
+          id: 'first_30',
+          content: 'はじめまして！[ガーデニング]がお好きなんですね。僕も植物が好きで、特に[植物の種類]を育てています。ガーデニングの話などできればと思います。',
+          category: 'first_message_pack',
+        }
       ]
     },
     {
@@ -137,12 +256,141 @@ const Templates = () => {
           content: 'お話ししていてとても楽しいです！もしよろしければ、今度お時間のある時に少しお電話でお話しできませんか？LINEの方が通話しやすいかなと思うのですが...',
           category: 'line_transition_pack',
         },
-        // 残りのテンプレートを追加
-        ...Array.from({ length: 27 }, (_, i) => ({
-          id: `line_${i + 4}`,
-          content: `[状況${i + 4}]なので、もしよろしければLINEでやり取りしませんか？[理由${i + 4}]で、より便利だと思います。もちろん無理でしたら大丈夫です！`,
+        {
+          id: 'line_4',
+          content: 'アプリだと文字数制限があるので、もしよろしければLINEでお話ししませんか？もっと詳しくお話しできそうで...',
           category: 'line_transition_pack',
-        }))
+        },
+        {
+          id: 'line_5',
+          content: '[趣味の話]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_6',
+          content: 'アプリだと画像の送信が制限されているので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_7',
+          content: 'お話ししていてとても楽しいです！もしよろしければ、今度お時間のある時に少しお電話でお話しできませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_8',
+          content: 'アプリだと通知に気づかないことがあるので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_9',
+          content: '[話題の内容]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_10',
+          content: 'アプリだと文字数制限があるので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_11',
+          content: '[趣味の話]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_12',
+          content: 'アプリだと画像の送信が制限されているので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_13',
+          content: 'お話ししていてとても楽しいです！もしよろしければ、今度お時間のある時に少しお電話でお話しできませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_14',
+          content: 'アプリだと通知に気づかないことがあるので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_15',
+          content: '[話題の内容]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_16',
+          content: 'アプリだと文字数制限があるので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_17',
+          content: '[趣味の話]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_18',
+          content: 'アプリだと画像の送信が制限されているので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_19',
+          content: 'お話ししていてとても楽しいです！もしよろしければ、今度お時間のある時に少しお電話でお話しできませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_20',
+          content: 'アプリだと通知に気づかないことがあるので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_21',
+          content: '[話題の内容]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_22',
+          content: 'アプリだと文字数制限があるので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_23',
+          content: '[趣味の話]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_24',
+          content: 'アプリだと画像の送信が制限されているので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_25',
+          content: 'お話ししていてとても楽しいです！もしよろしければ、今度お時間のある時に少しお電話でお話しできませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_26',
+          content: 'アプリだと通知に気づかないことがあるので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_27',
+          content: '[話題の内容]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_28',
+          content: 'アプリだと文字数制限があるので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_29',
+          content: '[趣味の話]についてもっと詳しく聞きたいので、もしよろしければLINEでお話ししませんか？',
+          category: 'line_transition_pack',
+        },
+        {
+          id: 'line_30',
+          content: 'アプリだと画像の送信が制限されているので、もしよろしければLINEでやり取りしませんか？',
+          category: 'line_transition_pack',
+        }
       ]
     },
     {
@@ -168,12 +416,141 @@ const Templates = () => {
           content: '[映画の話題]の映画、僕も見たいと思っていました！もしよろしければ、今度一緒に見に行きませんか？',
           category: 'date_invitation_pack',
         },
-        // 残りのテンプレートを追加
-        ...Array.from({ length: 27 }, (_, i) => ({
-          id: `date_${i + 4}`,
-          content: `[活動${i + 4}]について話していて、とても興味深かったです。今度一緒に[具体的な提案${i + 4}]はいかがですか？お時間のある時で大丈夫です。`,
+        {
+          id: 'date_4',
+          content: '[音楽の話題]のアーティスト、僕も好きです！今度一緒にライブに行きませんか？とても素敵な音楽だと思います。',
           category: 'date_invitation_pack',
-        }))
+        },
+        {
+          id: 'date_5',
+          content: '[スポーツの話題]について話していて、とても興味深かったです。今度一緒に[スポーツ名]をしませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_6',
+          content: '[旅行の話題]について話していて、とても興味深かったです。今度一緒に[旅行先]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_7',
+          content: '[料理の話題]について話していて、とても興味深かったです。今度一緒に[料理名]を作りませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_8',
+          content: '[アートの話題]について話していて、とても興味深かったです。今度一緒に[美術館名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_9',
+          content: '[読書の話題]について話していて、とても興味深かったです。今度一緒に[本のタイトル]を読みませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_10',
+          content: '[ゲームの話題]について話していて、とても興味深かったです。今度一緒に[ゲーム名]をプレイしませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_11',
+          content: '[ファッションの話題]について話していて、とても興味深かったです。今度一緒に[ショッピングモール名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_12',
+          content: '[カフェの話題]について話していて、とても興味深かったです。今度一緒に[カフェ名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_13',
+          content: '[写真の話題]について話していて、とても興味深かったです。今度一緒に[撮影場所]で写真を撮りませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_14',
+          content: '[ヨガの話題]について話していて、とても興味深かったです。今度一緒に[ヨガスタジオ名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_15',
+          content: '[ワインの話題]について話していて、とても興味深かったです。今度一緒に[ワインバー名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_16',
+          content: '[ダンスの話題]について話していて、とても興味深かったです。今度一緒に[ダンススタジオ名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_17',
+          content: '[アニメの話題]について話していて、とても興味深かったです。今度一緒に[アニメ名]を観ませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_18',
+          content: '[登山の話題]について話していて、とても興味深かったです。今度一緒に[山の名前]に登りませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_19',
+          content: '[陶芸の話題]について話していて、とても興味深かったです。今度一緒に[陶芸教室名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_20',
+          content: '[占いの話題]について話していて、とても興味深かったです。今度一緒に[占い店名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_21',
+          content: '[ボランティアの話題]について話していて、とても興味深かったです。今度一緒に[ボランティア活動名]をしませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_22',
+          content: '[外国語の話題]について話していて、とても興味深かったです。今度一緒に[言語名]を勉強しませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_23',
+          content: '[投資の話題]について話していて、とても興味深かったです。今度一緒に[投資セミナー名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_24',
+          content: '[DIYの話題]について話していて、とても興味深かったです。今度一緒に[DIYプロジェクト名]をしませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_25',
+          content: '[ガーデニングの話題]について話していて、とても興味深かったです。今度一緒に[植物名]を育てませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_26',
+          content: '[ペットの話題]について話していて、とても興味深かったです。今度一緒に[ペットショップ名]に行きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_27',
+          content: '[映画の話題]について話していて、とても興味深かったです。今度一緒に[映画館名]で映画を観ませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_28',
+          content: '[音楽の話題]について話していて、とても興味深かったです。今度一緒に[ライブハウス名]でライブを聴きませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_29',
+          content: '[スポーツの話題]について話していて、とても興味深かったです。今度一緒に[スポーツジム名]で運動しませんか？',
+          category: 'date_invitation_pack',
+        },
+        {
+          id: 'date_30',
+          content: '[旅行の話題]について話していて、とても興味深かったです。今度一緒に[旅行先]に旅行しませんか？',
+          category: 'date_invitation_pack',
+        }
       ]
     },
     {
@@ -199,12 +576,141 @@ const Templates = () => {
           content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
           category: 'conversation_topics_pack',
         },
-        // 残りのテンプレートを追加
-        ...Array.from({ length: 27 }, (_, i) => ({
-          id: `topic_${i + 4}`,
-          content: `[話題${i + 4}]について、とても面白いですね！僕も[関連する体験や考え${i + 4}]で、詳しくお聞かせいただけませんか？`,
+        {
+          id: 'topic_4',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
           category: 'conversation_topics_pack',
-        }))
+        },
+        {
+          id: 'topic_5',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_6',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_7',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_8',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_9',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_10',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_11',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_12',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_13',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_14',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_15',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_16',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_17',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_18',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_19',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_20',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_21',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_22',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_23',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_24',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_25',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_26',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_27',
+          content: '[趣味]をされているんですね！どのくらい続けられているんですか？僕も[関連する経験]があって、とても興味があります。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_28',
+          content: '[話題]について、とても面白いですね！僕も[関連する体験]があって、詳しくお聞かせいただけませんか？',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_29',
+          content: 'それは確かに！僕も同じこと思ってました（笑）でも実際やってみると意外と[具体的な体験]で、面白かったです。',
+          category: 'conversation_topics_pack',
+        },
+        {
+          id: 'topic_30',
+          content: 'わかります！僕も[共感する内容]で、すごく共感できます。[相手の話題]について、もう少し詳しく聞かせていただけませんか？',
+          category: 'conversation_topics_pack',
+        }
       ]
     }
   ];
