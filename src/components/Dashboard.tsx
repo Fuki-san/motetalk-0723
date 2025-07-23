@@ -604,7 +604,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">自然な会話の流れを作りましょう</h3>
             <p className="text-gray-600 mb-6">相手からのメッセージを入力すると、AIが文脈を理解して自然な返信を3つ提案します。<br />返信を選択・編集・送信後、相手の次のメッセージも入力すれば連続的な会話サポートが可能です。</p>
-            <div className="flex justify-center space-x-6 text-sm text-gray-500">
+            <div className="flex justify-center space-x-6 text-sm text-gray-500 mb-8">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span>文脈理解</span>
@@ -618,6 +618,51 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                 <span>連続対話</span>
               </div>
             </div>
+            
+            {/* 無料ユーザー向けCTA */}
+            {usageLimit && usageLimit.plan === 'free' && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6 mt-8">
+                <div className="flex items-center justify-center mb-4">
+                  <Crown className="w-6 h-6 text-purple-600 mr-2" />
+                  <h4 className="text-lg font-semibold text-gray-800">プレミアムプランでさらに快適に</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <MessageCircle className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h5 className="font-medium text-gray-800 mb-1">無制限利用</h5>
+                    <p className="text-sm text-gray-600">月3回の制限なし</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <History className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h5 className="font-medium text-gray-800 mb-1">会話履歴保存</h5>
+                    <p className="text-sm text-gray-600">過去の会話を管理</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <Star className="w-6 h-6 text-green-600" />
+                    </div>
+                    <h5 className="font-medium text-gray-800 mb-1">全テンプレート</h5>
+                    <p className="text-sm text-gray-600">120種類使い放題</p>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-3">
+                    <span className="font-semibold text-purple-600">今なら月額1,980円</span>で全ての機能が利用可能
+                  </p>
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Crown className="w-4 h-4 inline mr-2" />
+                    プレミアムプランにアップグレード
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
         

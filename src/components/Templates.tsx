@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Heart, Coffee, Star, Crown, Copy, Lock, ShoppingBag, Check } from 'lucide-react';
-import { purchaseTemplate, templatePacks as stripeTemplatePacks } from '../services/stripeService';
+import { purchaseTemplate, templatePacks as stripeTemplatePacks, checkTemplatePurchaseStatus } from '../services/stripeService';
 import { useAuth } from '../hooks/useAuth';
 import { useUserData } from '../hooks/useUserData';
 
@@ -27,10 +27,35 @@ const Templates = () => {
   const [selectedCategory, setSelectedCategory] = useState('first_message_pack');
   const [viewMode, setViewMode] = useState<'shop' | 'purchased'>('shop');
   const [copiedTemplateId, setCopiedTemplateId] = useState<string>('');
+  const [purchasedTemplates, setPurchasedTemplates] = useState<string[]>([]);
+  const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // 購入済みテンプレートの状態管理
-  const purchasedTemplates = userProfile?.purchasedTemplates || [];
-  const isPremiumUser = userProfile?.plan === 'premium';
+  // 購入済みテンプレートの状態を動的に取得
+  useEffect(() => {
+    const loadTemplatePurchaseStatus = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const status = await checkTemplatePurchaseStatus();
+        setPurchasedTemplates(status.purchasedTemplates || []);
+        setIsPremiumUser(status.isPremiumUser || false);
+      } catch (error) {
+        console.error('テンプレート購入状況の取得に失敗:', error);
+        // フォールバック: userProfileから取得
+        setPurchasedTemplates(userProfile?.purchasedTemplates || []);
+        setIsPremiumUser(userProfile?.plan === 'premium');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTemplatePurchaseStatus();
+  }, [user, userProfile]);
 
   // テンプレートデータ（実際のデータ）
   const templateCategories: TemplateCategory[] = [
@@ -220,6 +245,20 @@ const Templates = () => {
   const displayCategories = viewMode === 'purchased' 
     ? templateCategories.filter(cat => purchasedTemplates.includes(cat.id) || isPremiumUser)
     : templateCategories;
+
+  // ローディング中はスピナーを表示
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">テンプレート情報を読み込み中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">

@@ -246,3 +246,38 @@ export const checkPurchaseStatus = async (sessionId: string) => {
     throw error;
   }
 };
+
+// テンプレート購入状況の確認
+export const checkTemplatePurchaseStatus = async () => {
+  try {
+    const response = await fetch('/api/template-purchase-status', {
+      headers: {
+        'Authorization': `Bearer ${await getAuthToken()}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to check template purchase status');
+    }
+
+    return await response.json();
+
+  } catch (error) {
+    console.error('Template purchase status check error:', error);
+    throw error;
+  }
+};
+
+// 認証トークンを取得するヘルパー関数
+const getAuthToken = async (): Promise<string> => {
+  // Firebase AuthからIDトークンを取得
+  const { getAuth } = await import('firebase/auth');
+  const auth = getAuth();
+  const user = auth.currentUser;
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  return await user.getIdToken();
+};

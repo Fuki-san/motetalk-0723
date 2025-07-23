@@ -18,6 +18,86 @@ const EMAIL_SERVICE_CONFIG = {
   supportEmail: 'support@motetalk.com'
 };
 
+// メールテンプレート生成
+function generateEmailTemplate(type, data) {
+  if (!EMAIL_SERVICE_CONFIG.enabled) {
+    return null;
+  }
+
+  const templates = {
+    subscription_canceled: {
+      subject: 'MoteTalk サブスクリプション解約のお知らせ',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6b46c1;">MoteTalk サブスクリプション解約のお知らせ</h2>
+          <p>${data.name}様</p>
+          <p>MoteTalkをご利用いただき、ありがとうございました。</p>
+          <p>サブスクリプションが解約されました。課金期間終了日（${data.periodEnd}）までサービスをご利用いただけます。</p>
+          <p>ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+          <p>MoteTalk サポートチーム</p>
+        </div>
+      `,
+      text: `
+MoteTalk サブスクリプション解約のお知らせ
+
+${data.name}様
+
+MoteTalkをご利用いただき、ありがとうございました。
+
+サブスクリプションが解約されました。課金期間終了日（${data.periodEnd}）までサービスをご利用いただけます。
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+MoteTalk サポートチーム
+      `
+    },
+    template_purchased: {
+      subject: 'MoteTalk テンプレート購入完了のお知らせ',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #6b46c1;">MoteTalk テンプレート購入完了</h2>
+          <p>${data.name}様</p>
+          <p>${data.templateName}の購入が完了しました。</p>
+          <p>テンプレートページからすぐにご利用いただけます。</p>
+          <p>ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+          <p>MoteTalk サポートチーム</p>
+        </div>
+      `,
+      text: `
+MoteTalk テンプレート購入完了
+
+${data.name}様
+
+${data.templateName}の購入が完了しました。
+
+テンプレートページからすぐにご利用いただけます。
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+MoteTalk サポートチーム
+      `
+    }
+  };
+
+  return templates[type] || null;
+}
+
+// メール送信関数
+async function sendEmail(to, subject, html, text) {
+  if (!EMAIL_SERVICE_CONFIG.enabled) {
+    console.log('📧 メール送信（開発環境のためスキップ）:', { to, subject });
+    return;
+  }
+
+  try {
+    // 実際の実装では SendGrid, AWS SES, Nodemailer などを使用
+    console.log('📧 メール送信:', { to, subject });
+    // ここに実際のメール送信処理を実装
+  } catch (error) {
+    console.error('❌ メール送信エラー:', error);
+  }
+}
+
 // 環境変数のデバッグ情報を出力
 console.log('🔍 環境変数チェック:', {
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? '✅ 設定済み' : '❌ 未設定',
@@ -1180,6 +1260,138 @@ app.delete('/api/delete-conversations', authenticateUser, requireAuth, async (re
   }
 });
 
+// テンプレート購入処理API
+app.post('/api/purchase-template', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🛒 テンプレート購入リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const { templateId } = req.body;
+    
+    if (!templateId) {
+      return res.status(400).json({ error: 'Template ID required' });
+    }
+    
+    // 有効なテンプレートIDかチェック
+    const validTemplateIds = [
+      'first_message_pack',
+      'line_transition_pack', 
+      'date_invitation_pack',
+      'conversation_topics_pack'
+    ];
+    
+    if (!validTemplateIds.includes(templateId)) {
+      return res.status(400).json({ error: 'Invalid template ID' });
+    }
+    
+    try {
+      // ユーザー情報を取得
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      const purchasedTemplates = userData.purchasedTemplates || [];
+      
+      // 既に購入済みかチェック
+      if (purchasedTemplates.includes(templateId)) {
+        return res.status(400).json({ 
+          error: 'Template already purchased',
+          message: 'このテンプレートは既に購入済みです'
+        });
+      }
+      
+      // 購入済みテンプレートリストに追加
+      const updatedPurchasedTemplates = [...purchasedTemplates, templateId];
+      
+      await db.collection('users').doc(userId).update({
+        purchasedTemplates: updatedPurchasedTemplates,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log('✅ テンプレート購入成功:', templateId);
+      res.json({ 
+        success: true, 
+        message: 'テンプレートの購入が完了しました',
+        purchasedTemplates: updatedPurchasedTemplates
+      });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to purchase template',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Template purchase error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// テンプレート購入状況確認API
+app.get('/api/template-purchase-status', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📋 テンプレート購入状況確認 for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザー情報を取得
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      const purchasedTemplates = userData.purchasedTemplates || [];
+      const isPremiumUser = userData.plan === 'premium';
+      
+      // プレミアムユーザーは全テンプレート利用可能
+      const availableTemplates = isPremiumUser 
+        ? ['first_message_pack', 'line_transition_pack', 'date_invitation_pack', 'conversation_topics_pack']
+        : purchasedTemplates;
+      
+      res.json({
+        purchasedTemplates: availableTemplates,
+        isPremiumUser,
+        plan: userData.plan
+      });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to get template purchase status',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Template purchase status error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // アカウント削除
 app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
   try {
@@ -1324,6 +1536,11 @@ app.post('/webhook', async (req, res) => {
       
       // データベースに購入情報を保存
       await savePurchaseToDatabase(session);
+      
+      // テンプレート購入の場合はユーザーの購入済みテンプレートリストを更新
+      if (session.mode === 'payment') {
+        await handleTemplatePurchase(session);
+      }
       break;
 
     case 'customer.subscription.created':
@@ -1442,6 +1659,96 @@ async function handleSubscriptionEnd(subscription) {
   } catch (error) {
     console.error('❌ サブスクリプション終了処理エラー:', error);
   }
+}
+
+// テンプレート購入処理
+async function handleTemplatePurchase(session) {
+  try {
+    if (!db) {
+      console.error('❌ Firestore未初期化 - テンプレート購入処理をスキップ');
+      return;
+    }
+
+    const customerEmail = session.customer_details?.email;
+    if (!customerEmail) {
+      console.error('❌ カスタマー情報が見つかりません');
+      return;
+    }
+
+    // セッションの商品情報からテンプレートIDを特定
+    const lineItems = session.line_items?.data || [];
+    let templateId = null;
+
+    for (const item of lineItems) {
+      const productName = item.price_data?.product_data?.name;
+      if (productName) {
+        // 商品名からテンプレートIDを特定
+        if (productName.includes('初回メッセ')) {
+          templateId = 'first_message_pack';
+        } else if (productName.includes('LINE移行')) {
+          templateId = 'line_transition_pack';
+        } else if (productName.includes('誘い文句')) {
+          templateId = 'date_invitation_pack';
+        } else if (productName.includes('会話ネタ')) {
+          templateId = 'conversation_topics_pack';
+        }
+        break;
+      }
+    }
+
+    if (!templateId) {
+      console.error('❌ テンプレートIDを特定できませんでした');
+      return;
+    }
+
+    // ユーザーを特定してテンプレート購入情報を更新
+    const usersQuery = await db.collection('users').where('email', '==', customerEmail).get();
+    
+    if (!usersQuery.empty) {
+      const userDoc = usersQuery.docs[0];
+      const userData = userDoc.data();
+      const purchasedTemplates = userData.purchasedTemplates || [];
+      
+      // 既に購入済みでない場合のみ追加
+      if (!purchasedTemplates.includes(templateId)) {
+        const updatedPurchasedTemplates = [...purchasedTemplates, templateId];
+        
+        await userDoc.ref.update({
+          purchasedTemplates: updatedPurchasedTemplates,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log('✅ テンプレート購入完了:', templateId, 'for user:', customerEmail);
+        
+        // 購入完了通知メール
+        const emailTemplate = generateEmailTemplate('template_purchased', {
+          name: userData.name || customerEmail,
+          templateName: getTemplateDisplayName(templateId)
+        });
+        
+        if (emailTemplate) {
+          await sendEmail(customerEmail, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+        }
+      } else {
+        console.log('ℹ️ テンプレートは既に購入済み:', templateId);
+      }
+    } else {
+      console.error('❌ ユーザーが見つかりません:', customerEmail);
+    }
+  } catch (error) {
+    console.error('❌ テンプレート購入処理エラー:', error);
+  }
+}
+
+// テンプレート表示名を取得
+function getTemplateDisplayName(templateId) {
+  const templateNames = {
+    'first_message_pack': '初回メッセージパック',
+    'line_transition_pack': 'LINE移行パック',
+    'date_invitation_pack': 'デート誘いパック',
+    'conversation_topics_pack': '会話ネタパック'
+  };
+  return templateNames[templateId] || templateId;
 }
 
 
