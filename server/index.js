@@ -498,12 +498,13 @@ app.post('/api/user-settings', authenticateUser, requireAuth, async (req, res) =
     
     if (!settings.privacy?.saveConversationHistory) {
       console.log('🗑️ 会話履歴削除処理');
-      // 実際の会話履歴削除処理
+      // 実際の会話履歴削除処理（インデックスエラー回避のためwhereを削除）
       if (db) {
-        const conversationsQuery = await db.collection('conversations').where('userId', '==', userId).get();
-        const deletePromises = conversationsQuery.docs.map(doc => doc.ref.delete());
+        const conversationsQuery = await db.collection('conversations').get();
+        const userConversations = conversationsQuery.docs.filter(doc => doc.data().userId === userId);
+        const deletePromises = userConversations.map(doc => doc.ref.delete());
         await Promise.all(deletePromises);
-        console.log('✅ 会話履歴削除完了:', conversationsQuery.docs.length, '件');
+        console.log('✅ 会話履歴削除完了:', userConversations.length, '件');
       }
     }
     
@@ -1511,18 +1512,17 @@ app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res
       const userData = userDoc.data();
       console.log('🗑️ User data found:', userData);
       
-      // ユーザーの会話履歴を削除
+      // ユーザーの会話履歴を削除（インデックスエラー回避のためwhereを削除）
       console.log('🗑️ Fetching conversations...');
-      const conversationsSnapshot = await db.collection('conversations')
-        .where('userId', '==', userId)
-        .get();
+      const conversationsSnapshot = await db.collection('conversations').get();
+      const userConversations = conversationsSnapshot.docs.filter(doc => doc.data().userId === userId);
       
-      console.log('🗑️ Found conversations:', conversationsSnapshot.docs.length, '件');
+      console.log('🗑️ Found conversations:', userConversations.length, '件');
       
-      if (conversationsSnapshot.docs.length > 0) {
-        const deletePromises = conversationsSnapshot.docs.map(doc => doc.ref.delete());
+      if (userConversations.length > 0) {
+        const deletePromises = userConversations.map(doc => doc.ref.delete());
         await Promise.all(deletePromises);
-        console.log('🗑️ 会話履歴削除完了:', conversationsSnapshot.docs.length, '件');
+        console.log('🗑️ 会話履歴削除完了:', userConversations.length, '件');
       } else {
         console.log('🗑️ No conversations to delete');
       }
@@ -1569,17 +1569,19 @@ async function deleteUserData(userId) {
       return;
     }
 
-    // 会話履歴削除
-    const conversationsQuery = await db.collection('conversations').where('userId', '==', userId).get();
-    const deleteConversationPromises = conversationsQuery.docs.map(doc => doc.ref.delete());
+    // 会話履歴削除（インデックスエラー回避のためwhereを削除）
+    const conversationsQuery = await db.collection('conversations').get();
+    const userConversations = conversationsQuery.docs.filter(doc => doc.data().userId === userId);
+    const deleteConversationPromises = userConversations.map(doc => doc.ref.delete());
     await Promise.all(deleteConversationPromises);
-    console.log('✅ 会話履歴削除完了:', conversationsQuery.docs.length, '件');
+    console.log('✅ 会話履歴削除完了:', userConversations.length, '件');
     
-    // 購入履歴削除
-    const purchasesQuery = await db.collection('purchases').where('userId', '==', userId).get();
-    const deletePurchasePromises = purchasesQuery.docs.map(doc => doc.ref.delete());
+    // 購入履歴削除（インデックスエラー回避のためwhereを削除）
+    const purchasesQuery = await db.collection('purchases').get();
+    const userPurchases = purchasesQuery.docs.filter(doc => doc.data().userId === userId);
+    const deletePurchasePromises = userPurchases.map(doc => doc.ref.delete());
     await Promise.all(deletePurchasePromises);
-    console.log('✅ 購入履歴削除完了:', purchasesQuery.docs.length, '件');
+    console.log('✅ 購入履歴削除完了:', userPurchases.length, '件');
     
     // ユーザープロフィール削除
     await db.collection('users').doc(userId).delete();
