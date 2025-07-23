@@ -885,87 +885,60 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
       
     } catch (dbError) {
       console.error('❌ Database operation failed:', dbError);
-      // データベースエラーの場合もデフォルト値を返す
-      res.json({ 
-        success: true, 
-        remainingUses: 2,
-        totalUses: 3
-      });
+      res.status(500).json({ error: 'Failed to increment usage' });
     }
     
   } catch (error) {
     console.error('❌ Increment usage error:', error);
-    // エラーの場合もデフォルト値を返す（500エラーを避ける）
-    res.json({ 
-      success: true, 
-      remainingUses: 2,
-      totalUses: 3
-    });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // アカウント削除
 app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
   try {
+    console.log('🗑️ アカウント削除リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
     const userId = req.user.uid;
-    const email = req.user.email;
     
-    console.log('🗑️ アカウント削除リクエスト:', { userId, email });
-    
-    // 1. ユーザーのサブスクリプションを解約
-    if (db) {
+    try {
+      // ユーザー情報を取得
       const userDoc = await db.collection('users').doc(userId).get();
-      if (userDoc.exists && userDoc.data().subscriptionId) {
-        try {
-          await stripe.subscriptions.cancel(userDoc.data().subscriptionId);
-          console.log('✅ サブスクリプション解約完了');
-        } catch (error) {
-          console.error('⚠️ サブスクリプション解約エラー:', error.message);
-        }
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
       }
+      
+      // ユーザーの会話履歴を削除
+      const conversationsSnapshot = await db.collection('conversations')
+        .where('userId', '==', userId)
+        .get();
+      
+      const deletePromises = conversationsSnapshot.docs.map(doc => doc.ref.delete());
+      await Promise.all(deletePromises);
+      
+      console.log('🗑️ 会話履歴削除完了:', conversationsSnapshot.docs.length, '件');
+      
+      // ユーザー情報を削除
+      await db.collection('users').doc(userId).delete();
+      
+      console.log('✅ アカウント削除成功');
+      res.json({ success: true, message: 'アカウントが正常に削除されました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to delete account' });
     }
     
-    // 2. Firestoreからユーザーデータを削除
-    await deleteUserData(userId);
-    
-    // 3. Firebase Authenticationからユーザーを削除
-    if (admin.apps.length) {
-      try {
-        await admin.auth().deleteUser(userId);
-        console.log('✅ Firebase認証削除完了:', userId);
-      } catch (error) {
-        console.error('⚠️ Firebase認証削除エラー:', error.message);
-      }
-    }
-    
-    // 4. Stripe顧客削除（必要に応じて）
-    if (db) {
-      const userDoc = await db.collection('users').doc(userId).get();
-      if (userDoc.exists && userDoc.data().stripeCustomerId) {
-        try {
-          await stripe.customers.del(userDoc.data().stripeCustomerId);
-          console.log('✅ Stripe顧客削除完了');
-        } catch (error) {
-          console.error('⚠️ Stripe顧客削除エラー:', error.message);
-        }
-      }
-    }
-    
-    // 削除完了ログ
-    console.log('🎯 アカウント削除処理完了:', email);
-    
-    res.json({ 
-      success: true, 
-      message: 'アカウントが正常に削除されました' 
-    });
-
   } catch (error) {
-    console.error('❌ Account deletion error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      message: 'アカウント削除中にエラーが発生しました'
-    });
+    console.error('❌ アカウント削除エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
