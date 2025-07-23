@@ -37,14 +37,46 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     purchasedTemplates: userProfile?.purchasedTemplates || []
   };
 
+  // 購入履歴を取得
+  const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPurchaseHistory = async () => {
+      if (!authUser) return;
+      
+      setHistoryLoading(true);
+      try {
+        const response = await fetch('/api/purchase-history', {
+          headers: {
+            'Authorization': `Bearer ${await authUser.getIdToken()}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setPurchaseHistory(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch purchase history:', error);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchPurchaseHistory();
+  }, [authUser]);
+
   // テンプレートパック情報を取得
   const getPurchasedTemplateInfo = (templateId: string) => {
     const pack = templatePacks.find(p => p.id === templateId);
+    const purchase = purchaseHistory?.purchases?.find((p: any) => p.templateId === templateId);
+    
     return pack ? {
       id: templateId,
       name: pack.name,
       price: pack.price,
-      purchaseDate: '購入日不明' // 実際の実装では購入履歴から取得
+      purchaseDate: purchase?.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'
     } : null;
   };
 
@@ -330,67 +362,74 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       case 'purchases':
         return (
           <div className="space-y-6">
-            {/* サブスクリプション履歴 */}
-            {userData.plan === 'プレミアム' && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                  <Crown className="w-5 h-5 mr-2" />
-                  サブスクリプション履歴
-                </h3>
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-gray-800">プレミアムプラン</h4>
-                      <p className="text-sm text-gray-600">月額 ¥1,980</p>
-                      <p className="text-xs text-gray-500">継続中</p>
-                    </div>
-                    <Crown className="w-5 h-5 text-yellow-500" />
-                  </div>
-                </div>
+            {historyLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">購入履歴を読み込み中...</p>
               </div>
-            )}
-
-            {/* テンプレート購入履歴 */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                <Download className="w-5 h-5 mr-2" />
-                テンプレート購入履歴
-              </h3>
-              
-              {userData.purchasedTemplates.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {userData.purchasedTemplates.map((templateId: string) => {
-                    const templateInfo = getPurchasedTemplateInfo(templateId);
-                    return templateInfo ? (
-                      <div key={templateId} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+            ) : (
+              <>
+                {/* サブスクリプション履歴 */}
+                {purchaseHistory?.subscriptions && purchaseHistory.subscriptions.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                      <Crown className="w-5 h-5 mr-2" />
+                      サブスクリプション履歴
+                    </h3>
+                    {purchaseHistory.subscriptions.map((sub: any) => (
+                      <div key={sub.id} className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 mb-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-medium text-gray-800">{templateInfo.name}</h4>
-                            <p className="text-sm text-gray-600">¥{templateInfo.price.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">{templateInfo.purchaseDate}</p>
+                            <h4 className="font-medium text-gray-800">プレミアムプラン</h4>
+                            <p className="text-sm text-gray-600">月額 ¥{sub.amount.toLocaleString()}</p>
+                            <p className="text-xs text-gray-500">
+                              {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('ja-JP') : '購入日不明'}
+                            </p>
                           </div>
-                          <Check className="w-5 h-5 text-green-500" />
+                          <Crown className="w-5 h-5 text-yellow-500" />
                         </div>
                       </div>
-                    ) : null;
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Download className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">購入済みテンプレートがありません</p>
-                  <p className="text-sm text-gray-400 mt-2">テンプレートパックをご購入いただくと、ここに表示されます。</p>
-                  <button 
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('navigate', { detail: 'templates' }));
-                    }}
-                    className="mt-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-                  >
-                    テンプレートを見る
-                  </button>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* テンプレート購入履歴 */}
+                {purchaseHistory?.purchases && purchaseHistory.purchases.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                      <Download className="w-5 h-5 mr-2" />
+                      テンプレート購入履歴
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {purchaseHistory.purchases.map((purchase: any) => (
+                        <div key={purchase.id} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-gray-800">{purchase.templateName}</h4>
+                              <p className="text-sm text-gray-600">¥{purchase.amount.toLocaleString()}</p>
+                              <p className="text-xs text-gray-500">
+                                {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'}
+                              </p>
+                            </div>
+                            <Check className="w-5 h-5 text-green-500" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 購入履歴がない場合 */}
+                {(!purchaseHistory?.subscriptions || purchaseHistory.subscriptions.length === 0) && 
+                 (!purchaseHistory?.purchases || purchaseHistory.purchases.length === 0) && (
+                  <div className="text-center py-8">
+                    <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">購入履歴がありません</p>
+                    <p className="text-sm text-gray-400 mt-2">テンプレートパックやプレミアムプランをご購入いただくと、ここに表示されます。</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         );
 

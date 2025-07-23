@@ -67,29 +67,29 @@ export const templatePacks: TemplatePack[] = [
   {
     id: 'first_message_pack',
     name: '初回メッセ神パターン集',
-    description: 'Tinder・タップル用15種類',
-    price: 980,
+    description: 'Tinder・タップル用30種類',
+    price: 2500,
     features: ['返信率UP実績あり', 'アプリ別最適化', '即使える例文']
   },
   {
     id: 'line_transition_pack',
     name: 'LINE移行テンプレ',
-    description: 'アプリ→LINE自然移行例',
-    price: 1280,
+    description: 'アプリ→LINE自然移行例30種類',
+    price: 2500,
     features: ['自然な流れ', '断られにくい文面', '成功率80%以上']
   },
   {
     id: 'date_invitation_pack',
     name: '誘い文句大全',
-    description: 'カフェ打診〜ホテルまでの誘導文',
-    price: 1980,
+    description: 'カフェ打診〜ホテルまでの誘導文30種類',
+    price: 2500,
     features: ['段階別アプローチ', '相手に合わせた誘い方', '実践的な例文多数']
   },
   {
     id: 'conversation_topics_pack',
     name: '会話ネタ一覧',
-    description: 'ボケ例／共感ネタ／趣味深掘りなど',
-    price: 1980,
+    description: 'ボケ例／共感ネタ／趣味深掘りなど30種類',
+    price: 2500,
     features: ['会話が続く', '笑いを取れる', '深い関係に発展']
   }
 ];

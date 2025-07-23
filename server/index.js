@@ -266,45 +266,28 @@ app.post('/api/create-checkout-session', async (req, res) => {
     };
 
     if (type === 'subscription') {
-      // サブスクリプション設定
-      const priceData = {
-        premium_monthly: {
-          unit_amount: 198000, // ¥1,980
-          currency: 'jpy',
-          recurring: { interval: 'month' },
-          product_data: {
-            name: 'MoteTalk プレミアムプラン',
-            description: 'AI返信生成無制限、全テンプレート使い放題'
-          }
-        }
+      // サブスクリプション設定 - 実際のPrice IDを使用
+      const priceIds = {
+        premium_monthly: 'price_1Rl6VZQoDVsMq3SiLcu7GnkA' // 1,980円/月
       };
 
       sessionConfig.mode = 'subscription';
       sessionConfig.line_items = [{
-        price_data: priceData[planId],
+        price: priceIds[planId],
         quantity: 1,
       }];
     } else if (type === 'one_time') {
-      // 買い切り購入設定
-      const templatePrices = {
-        first_message_pack: { amount: 98000, name: '初回メッセ神パターン集' },
-        line_transition_pack: { amount: 128000, name: 'LINE移行テンプレ' },
-        date_invitation_pack: { amount: 198000, name: '誘い文句大全' },
-        conversation_topics_pack: { amount: 198000, name: '会話ネタ一覧' }
+      // 買い切り購入設定 - 実際のPrice IDを使用
+      const priceIds = {
+        first_message_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 2,500円
+        line_transition_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 2,500円
+        date_invitation_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 2,500円
+        conversation_topics_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14' // 2,500円
       };
 
-      const template = templatePrices[templateId];
-      
       sessionConfig.mode = 'payment';
       sessionConfig.line_items = [{
-        price_data: {
-          currency: 'jpy',
-          unit_amount: template.amount,
-          product_data: {
-            name: template.name,
-            description: 'MoteTalk テンプレートパック'
-          }
-        },
+        price: priceIds[templateId],
         quantity: 1,
       }];
     }
@@ -1393,6 +1376,58 @@ app.get('/api/template-purchase-status', authenticateUser, requireAuth, async (r
   }
 });
 
+// 購入履歴の取得
+app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+    if (!db) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    // サブスクリプション履歴
+    const subscriptions = await db.collection('subscriptions')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    // テンプレート購入履歴
+    const purchases = await db.collection('purchases')
+      .where('userId', '==', userId)
+      .orderBy('purchasedAt', 'desc')
+      .get();
+
+    const subscriptionHistory = subscriptions.docs.map(doc => ({
+      id: doc.id,
+      type: 'subscription',
+      plan: doc.data().plan,
+      status: doc.data().status,
+      amount: 1980,
+      createdAt: doc.data().createdAt?.toDate(),
+      ...doc.data()
+    }));
+
+    const purchaseHistory = purchases.docs.map(doc => ({
+      id: doc.id,
+      type: 'template',
+      templateId: doc.data().templateId,
+      templateName: doc.data().templateName,
+      amount: doc.data().amount,
+      purchasedAt: doc.data().purchasedAt?.toDate(),
+      ...doc.data()
+    }));
+
+    res.json({
+      subscriptions: subscriptionHistory,
+      purchases: purchaseHistory
+    });
+
+  } catch (error) {
+    console.error('Purchase history fetch error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // アカウント削除
 app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
   try {
@@ -1766,10 +1801,10 @@ function getTemplateDisplayName(templateId) {
 // テンプレート価格を取得
 function getTemplatePrice(templateId) {
   const templatePrices = {
-    'first_message_pack': 980,
-    'line_transition_pack': 1280,
-    'date_invitation_pack': 1980,
-    'conversation_topics_pack': 1980
+    'first_message_pack': 2500,
+    'line_transition_pack': 2500,
+    'date_invitation_pack': 2500,
+    'conversation_topics_pack': 2500
   };
   return templatePrices[templateId] || 0;
 }

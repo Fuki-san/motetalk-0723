@@ -57,28 +57,38 @@ const SuccessPage = () => {
         </p>
 
         <div className="space-y-3 mb-8">
-          <button
-            onClick={() => window.location.href = '/'}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-          >
-            <MessageCircle className="w-4 h-4 inline mr-2" />
-            AI返信生成を始める
-          </button>
-          
-          {purchaseInfo?.type === 'template' && (
+          {purchaseInfo?.type === 'subscription' ? (
             <button
-              onClick={() => {
-                // テンプレートページに遷移し、購入済みモードで表示
-                // 少し遅延を入れてWebhook処理の完了を待つ
-                setTimeout(() => {
-                  window.location.href = '/templates?view=purchased';
-                }, 2000);
-              }}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-200"
+              onClick={() => window.location.href = '/dashboard'}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
             >
               <Crown className="w-4 h-4 inline mr-2" />
-              購入済みテンプレートを見る（2秒後）
+              プレミアム機能を利用する
             </button>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  // テンプレートページに遷移し、購入済みモードで表示
+                  // 少し遅延を入れてWebhook処理の完了を待つ
+                  setTimeout(() => {
+                    window.location.href = '/templates?view=purchased';
+                  }, 2000);
+                }}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-200"
+              >
+                <Crown className="w-4 h-4 inline mr-2" />
+                購入済みテンプレートを見る（2秒後）
+              </button>
+              
+              <button
+                onClick={() => window.location.href = '/'}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+              >
+                <MessageCircle className="w-4 h-4 inline mr-2" />
+                AI返信生成を始める
+              </button>
+            </>
           )}
         </div>
 
