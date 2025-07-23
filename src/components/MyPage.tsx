@@ -11,7 +11,7 @@ interface MyPageProps {
 }
 
 const MyPage: React.FC<MyPageProps> = ({ user }) => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, signOut } = useAuth();
   const { userProfile, loading: userDataLoading } = useUserData();
   const { settings, loading: settingsLoading, saving: settingsSaving, updateNotificationSetting, updatePrivacySetting } = useUserSettings();
   const [activeTab, setActiveTab] = useState('profile');
@@ -131,9 +131,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
         alert('アカウントが正常に削除されました。ご利用いただき、ありがとうございました。');
         
         // Firebase認証からもサインアウト
-        if (authUser) {
-          await authUser.signOut();
-        }
+        await signOut();
         
         // トップページにリダイレクト
         window.location.href = '/';
