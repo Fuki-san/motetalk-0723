@@ -1856,10 +1856,15 @@ app.get('/', (req, res) => {
 });
 
 // SPAのルーティング - 静的ファイル以外のGETリクエストをindex.htmlにリダイレクト
-app.get('/*', (req, res) => {
+app.use((req, res, next) => {
   // APIルートは除外
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+    return next();
+  }
+  
+  // GETリクエストのみ処理
+  if (req.method !== 'GET') {
+    return next();
   }
   
   // 静的ファイルの拡張子をチェック
@@ -1880,7 +1885,7 @@ app.get('/*', (req, res) => {
 });
 
 // 404エラーハンドラー - すべてのリクエストを処理
-app.use('/*', (req, res) => {
+app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     res.status(404).json({ error: 'API endpoint not found' });
   } else {
