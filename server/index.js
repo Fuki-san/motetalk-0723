@@ -96,7 +96,17 @@ const staticPath = path.join(__dirname, '../dist');
 app.use(express.static(staticPath, {
   maxAge: '1h',
   etag: true,
-  lastModified: true
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // JavaScriptファイルのMIMEタイプを正しく設定
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+    // CSSファイルのMIMEタイプを設定
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    }
+  }
 }));
 
 // デバッグ用ログ
