@@ -281,6 +281,19 @@ app.use(express.static(path.join(__dirname, '../dist'), {
   maxAge: '1y' // キャッシュ設定
 }));
 
+// 静的ファイルが見つからない場合の404ハンドラー
+app.use((req, res, next) => {
+  // 静的ファイルの拡張子をチェック
+  const staticExtensions = ['.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
+  const hasStaticExtension = staticExtensions.some(ext => req.path.endsWith(ext));
+  
+  if (hasStaticExtension) {
+    return res.status(404).send('Static file not found');
+  }
+  
+  next();
+});
+
 // Stripe Checkout Session作成
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
@@ -1865,14 +1878,6 @@ app.use((req, res, next) => {
   // GETリクエストのみ処理
   if (req.method !== 'GET') {
     return next();
-  }
-  
-  // 静的ファイルの拡張子をチェック
-  const staticExtensions = ['.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
-  const hasStaticExtension = staticExtensions.some(ext => req.path.endsWith(ext));
-  
-  if (hasStaticExtension) {
-    return res.status(404).send('Static file not found');
   }
   
   // index.htmlを返す（SPAルーティング）
