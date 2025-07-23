@@ -1434,17 +1434,15 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
       return res.status(503).json({ error: 'Database not available' });
     }
 
-    // サブスクリプション履歴（インデックスエラー回避のためorderByを削除）
-    const subscriptions = await db.collection('subscriptions')
-      .where('userId', '==', userId)
-      .get();
+    // サブスクリプション履歴（インデックスエラー回避のためwhereも削除）
+    const subscriptions = await db.collection('subscriptions').get();
+    const userSubscriptions = subscriptions.docs.filter(doc => doc.data().userId === userId);
 
-    // テンプレート購入履歴（インデックスエラー回避のためorderByを削除）
-    const purchases = await db.collection('purchases')
-      .where('userId', '==', userId)
-      .get();
+    // テンプレート購入履歴（インデックスエラー回避のためwhereも削除）
+    const purchases = await db.collection('purchases').get();
+    const userPurchases = purchases.docs.filter(doc => doc.data().userId === userId);
 
-    const subscriptionHistory = subscriptions.docs.map(doc => ({
+    const subscriptionHistory = userSubscriptions.map(doc => ({
       id: doc.id,
       type: 'subscription',
       plan: doc.data().plan,
@@ -1459,7 +1457,7 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
       return dateB.getTime() - dateA.getTime();
     });
 
-    const purchaseHistory = purchases.docs.map(doc => ({
+    const purchaseHistory = userPurchases.map(doc => ({
       id: doc.id,
       type: 'template',
       templateId: doc.data().templateId,
