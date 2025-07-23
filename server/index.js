@@ -1856,7 +1856,7 @@ app.get('/', (req, res) => {
 });
 
 // SPAのルーティング - 静的ファイル以外のGETリクエストをindex.htmlにリダイレクト
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   // APIルートは除外
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
@@ -1880,7 +1880,7 @@ app.get('*', (req, res) => {
 });
 
 // 404エラーハンドラー - すべてのリクエストを処理
-app.use((req, res) => {
+app.use('/*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     res.status(404).json({ error: 'API endpoint not found' });
   } else {
