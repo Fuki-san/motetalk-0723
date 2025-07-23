@@ -48,13 +48,7 @@ const Templates = () => {
     };
 
     loadTemplatePurchaseStatus();
-
-    // 購入済みモードの場合、定期的に更新
-    if (viewMode === 'purchased') {
-      const interval = setInterval(loadTemplatePurchaseStatus, 5000); // 5秒ごとに更新
-      return () => clearInterval(interval);
-    }
-  }, [user, userProfile, viewMode]);
+  }, [user, userProfile]);
 
   // テンプレート購入処理
   const handlePurchase = async (categoryId: string) => {
@@ -214,47 +208,60 @@ const Templates = () => {
                   </div>
                 </div>
 
-                {/* Templates Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {selectedCategoryData.templates.map((template) => {
-                    const isPurchased = purchasedTemplates.includes(selectedCategoryData.id) || 
-                                      (selectedCategoryData.id === 'premium_pack' && isPremiumUser);
-                    const isPreview = template.isPreview && !isPurchased;
-                    
-                    return (
+                {/* Templates Display */}
+                {purchasedTemplates.includes(selectedCategoryData.id) || 
+                 (selectedCategoryData.id === 'premium_pack' && isPremiumUser) ? (
+                  // 購入済みテンプレート: 箇条書きで表示
+                  <div className="bg-white rounded-2xl shadow-xl p-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <h3 className="text-lg font-semibold text-gray-800">購入済みテンプレート</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {selectedCategoryData.templates.map((template, index) => (
+                        <div key={template.id} className="flex items-start space-x-3">
+                          <span className="text-purple-600 font-medium mt-1">{index + 1}.</span>
+                          <div className="flex-1">
+                            <p className="text-gray-800 leading-relaxed">{template.content}</p>
+                            <button
+                              onClick={() => handleCopyTemplate(template)}
+                              className="mt-2 flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors text-sm"
+                            >
+                              <Copy className="w-4 h-4" />
+                              <span>{copiedTemplateId === template.id ? 'コピーしました！' : 'コピー'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  // 未購入テンプレート: プレビュー表示（例文1つのみ）
+                  <div className="grid grid-cols-1 gap-6">
+                    {selectedCategoryData.templates.slice(0, 1).map((template) => (
                       <div key={template.id} className="bg-white rounded-2xl shadow-xl p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
-                              {isPreview && <Lock className="w-4 h-4 text-gray-400" />}
-                              {isPurchased && <Check className="w-4 h-4 text-green-500" />}
+                              <Lock className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-500">プレビュー</span>
                             </div>
                             <p className="text-gray-800 leading-relaxed">
-                              {isPreview ? template.content.substring(0, 100) + '...' : template.content}
+                              {template.content.substring(0, 100)}...
                             </p>
                           </div>
                         </div>
                         
                         <div className="flex items-center justify-between">
-                          {isPurchased ? (
-                            <button
-                              onClick={() => handleCopyTemplate(template)}
-                              className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors"
-                            >
-                              <Copy className="w-4 h-4" />
-                              <span>{copiedTemplateId === template.id ? 'コピーしました！' : 'コピー'}</span>
-                            </button>
-                          ) : (
-                            <div className="flex items-center space-x-2 text-gray-400">
-                              <Lock className="w-4 h-4" />
-                              <span>購入後に利用可能</span>
-                            </div>
-                          )}
+                          <div className="flex items-center space-x-2 text-gray-400">
+                            <Lock className="w-4 h-4" />
+                            <span>購入後に全30種のテンプレートが利用可能</span>
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
