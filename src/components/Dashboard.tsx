@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Copy, RefreshCw, Sparkles, MessageCircle, Crown, Star, ArrowRight, Trash2, RotateCcw, Settings, AlertTriangle } from 'lucide-react';
+import { Send, Copy, RefreshCw, Sparkles, MessageCircle, Crown, Star, ArrowRight, Trash2, RotateCcw, Settings, AlertTriangle, Plus, History, Save, FolderOpen } from 'lucide-react';
 import { generateReplies, ConversationTurn as ApiConversationTurn } from '../services/geminiService';
 import { checkUsageLimit, incrementUsage, getUsageDisplayText, getUsageWarningMessage, UsageLimit } from '../services/usageService';
+import { saveConversation, getConversationList, getConversation, deleteConversation, ConversationHistory, ConversationTurn as HistoryConversationTurn } from '../services/conversationService';
 import { useAuth } from '../hooks/useAuth';
 
 interface DashboardProps {
@@ -34,6 +35,12 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
   });
   const [usageLimit, setUsageLimit] = useState<UsageLimit | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<ConversationHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
 
   // 使用回数制限をチェック
   useEffect(() => {
@@ -143,6 +150,72 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     setEditableReply('');
   };
 
+  // 会話履歴一覧を取得
+  const loadConversationHistory = async () => {
+    if (!isAuthenticated || !authUser) return;
+    
+    try {
+      setHistoryLoading(true);
+      const history = await getConversationList();
+      setConversationHistory(history);
+    } catch (error) {
+      console.error('会話履歴の取得に失敗しました:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // 会話履歴を開く
+  const handleLoadConversation = async (conversationId: string) => {
+    try {
+      const conversation = await getConversation(conversationId);
+      if (conversation) {
+        setConversation(conversation.turns);
+        setCurrentReplies([]);
+        setInputMessage('');
+        setSelectedReplyIndex(null);
+        setEditableReply('');
+        setShowHistoryModal(false);
+      }
+    } catch (error) {
+      console.error('会話履歴の読み込みに失敗しました:', error);
+    }
+  };
+
+  // 会話履歴を削除
+  const handleDeleteConversation = async (conversationId: string) => {
+    if (confirm('この会話履歴を削除しますか？')) {
+      try {
+        await deleteConversation(conversationId);
+        await loadConversationHistory(); // 一覧を再取得
+      } catch (error) {
+        console.error('会話履歴の削除に失敗しました:', error);
+      }
+    }
+  };
+
+  // 会話を保存
+  const handleSaveConversation = async () => {
+    if (!saveTitle.trim() || conversation.length === 0) return;
+    
+    try {
+      setSaveLoading(true);
+      const success = await saveConversation(saveTitle, conversation);
+      if (success) {
+        setShowSaveModal(false);
+        setSaveTitle('');
+        alert('会話を保存しました！');
+      } else {
+        alert('会話の保存に失敗しました。');
+      }
+    } catch (error) {
+      console.error('会話の保存に失敗しました:', error);
+      alert('会話の保存に失敗しました。');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   const handleEditAndRegenerate = (turnId: string) => {
     const turn = conversation.find(t => t.id === turnId);
     if (turn) {
@@ -161,6 +234,31 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">AI会話アシスタント</h1>
           <p className="text-gray-600">連続対話で自然な会話の流れをサポート</p>
+          
+          {/* 会話履歴機能ボタン（有料ユーザーのみ） */}
+          {usageLimit && usageLimit.plan === 'premium' && (
+            <div className="flex justify-center space-x-4 mt-4">
+              <button
+                onClick={() => {
+                  loadConversationHistory();
+                  setShowHistoryModal(true);
+                }}
+                className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <History className="w-4 h-4" />
+                <span>会話履歴</span>
+              </button>
+              {conversation.length > 0 && (
+                <button
+                  onClick={() => setShowSaveModal(true)}
+                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>会話を保存</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
         {usageLimit && !usageLoading && (
           <div className={`border rounded-lg p-4 mb-6 ${
@@ -469,6 +567,120 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                 <span>連続対話</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* 会話履歴モーダル */}
+        {showHistoryModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">会話履歴</h3>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {historyLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">読み込み中...</p>
+                </div>
+              ) : conversationHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">保存された会話履歴がありません</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {conversationHistory.map((conv) => (
+                    <div key={conv.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800">{conv.title}</h4>
+                          <p className="text-sm text-gray-500">
+                            {conv.turns.length}回のやり取り • {conv.updatedAt.toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleLoadConversation(conv.id)}
+                            className="text-blue-600 hover:text-blue-700 text-sm"
+                          >
+                            開く
+                          </button>
+                          <button
+                            onClick={() => handleDeleteConversation(conv.id)}
+                            className="text-red-600 hover:text-red-700 text-sm"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* 会話保存モーダル */}
+        {showSaveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">会話を保存</h3>
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  会話のタイトル
+                </label>
+                <input
+                  type="text"
+                  value={saveTitle}
+                  onChange={(e) => setSaveTitle(e.target.value)}
+                  placeholder="例: 初回デートの会話"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleSaveConversation}
+                  disabled={!saveTitle.trim() || saveLoading}
+                  className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saveLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>保存中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>保存</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

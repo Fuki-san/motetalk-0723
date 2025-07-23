@@ -492,6 +492,274 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
   }
 });
 
+// 会話履歴保存API（有料ユーザーのみ）
+app.post('/api/conversations', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('💾 会話履歴保存リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const { title, turns } = req.body;
+    
+    if (!title || !turns || !Array.isArray(turns)) {
+      return res.status(400).json({ error: 'Invalid request data' });
+    }
+    
+    try {
+      // ユーザー情報を取得してプランをチェック
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      
+      // 無料ユーザーは会話履歴保存不可
+      if (userData.plan !== 'premium') {
+        console.log('❌ Free user cannot save conversation history');
+        return res.status(403).json({ 
+          error: 'Conversation history is only available for premium users',
+          message: '会話履歴はプレミアムユーザーのみ利用できます'
+        });
+      }
+      
+      // 会話履歴を保存
+      const conversationRef = await db.collection('conversations').add({
+        userId,
+        title,
+        turns: turns.map(turn => ({
+          ...turn,
+          timestamp: new Date(turn.timestamp)
+        })),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      const result = {
+        id: conversationRef.id,
+        title,
+        turns: turns.length,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log('✅ 会話履歴保存成功:', result);
+      res.json(result);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to save conversation' });
+    }
+    
+  } catch (error) {
+    console.error('❌ 会話履歴保存エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 会話履歴一覧取得API（有料ユーザーのみ）
+app.get('/api/conversations', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📋 会話履歴一覧取得リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザー情報を取得してプランをチェック
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      
+      // 無料ユーザーは会話履歴取得不可
+      if (userData.plan !== 'premium') {
+        console.log('❌ Free user cannot access conversation history');
+        return res.status(403).json({ 
+          error: 'Conversation history is only available for premium users',
+          message: '会話履歴はプレミアムユーザーのみ利用できます'
+        });
+      }
+      
+      // 会話履歴一覧を取得
+      const conversationsSnapshot = await db.collection('conversations')
+        .where('userId', '==', userId)
+        .orderBy('updatedAt', 'desc')
+        .get();
+      
+      const conversations = conversationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          turns: data.turns || [],
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        };
+      });
+      
+      const result = { conversations };
+      console.log('✅ 会話履歴一覧取得成功:', conversations.length, '件');
+      res.json(result);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to get conversations' });
+    }
+    
+  } catch (error) {
+    console.error('❌ 会話履歴一覧取得エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 特定の会話履歴取得API（有料ユーザーのみ）
+app.get('/api/conversations/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📖 会話履歴取得リクエスト for user:', req.user.uid, 'conversation:', req.params.id);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const conversationId = req.params.id;
+    
+    try {
+      // ユーザー情報を取得してプランをチェック
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      
+      // 無料ユーザーは会話履歴取得不可
+      if (userData.plan !== 'premium') {
+        console.log('❌ Free user cannot access conversation history');
+        return res.status(403).json({ 
+          error: 'Conversation history is only available for premium users',
+          message: '会話履歴はプレミアムユーザーのみ利用できます'
+        });
+      }
+      
+      // 会話履歴を取得
+      const conversationDoc = await db.collection('conversations').doc(conversationId).get();
+      
+      if (!conversationDoc.exists) {
+        return res.status(404).json({ error: 'Conversation not found' });
+      }
+      
+      const data = conversationDoc.data();
+      
+      // 他のユーザーの会話履歴は取得不可
+      if (data.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const result = {
+        id: conversationDoc.id,
+        title: data.title,
+        turns: data.turns || [],
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      };
+      
+      console.log('✅ 会話履歴取得成功:', result.title);
+      res.json(result);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to get conversation' });
+    }
+    
+  } catch (error) {
+    console.error('❌ 会話履歴取得エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 会話履歴削除API（有料ユーザーのみ）
+app.delete('/api/conversations/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🗑️ 会話履歴削除リクエスト for user:', req.user.uid, 'conversation:', req.params.id);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const conversationId = req.params.id;
+    
+    try {
+      // ユーザー情報を取得してプランをチェック
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const userData = userDoc.data();
+      
+      // 無料ユーザーは会話履歴削除不可
+      if (userData.plan !== 'premium') {
+        console.log('❌ Free user cannot delete conversation history');
+        return res.status(403).json({ 
+          error: 'Conversation history is only available for premium users',
+          message: '会話履歴はプレミアムユーザーのみ利用できます'
+        });
+      }
+      
+      // 会話履歴を取得して権限チェック
+      const conversationDoc = await db.collection('conversations').doc(conversationId).get();
+      
+      if (!conversationDoc.exists) {
+        return res.status(404).json({ error: 'Conversation not found' });
+      }
+      
+      const data = conversationDoc.data();
+      
+      // 他のユーザーの会話履歴は削除不可
+      if (data.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      // 会話履歴を削除
+      await db.collection('conversations').doc(conversationId).delete();
+      
+      console.log('✅ 会話履歴削除成功');
+      res.json({ success: true });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to delete conversation' });
+    }
+    
+  } catch (error) {
+    console.error('❌ 会話履歴削除エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // 使用回数増加API
 app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res) => {
   try {
