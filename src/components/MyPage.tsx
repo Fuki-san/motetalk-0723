@@ -17,6 +17,9 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // 購入履歴を取得
+  const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   if (userDataLoading) {
     return (
@@ -28,10 +31,6 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       </div>
     );
   }
-
-  // 購入履歴を取得
-  const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
 
   const userData = {
     name: user?.name || userProfile?.name || 'ユーザー',
