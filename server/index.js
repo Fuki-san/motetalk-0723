@@ -393,38 +393,11 @@ app.post('/api/user-settings', authenticateUser, requireAuth, async (req, res) =
 // 使用回数制限チェックAPI
 app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
   try {
-    console.log('🔍 Usage limit check request:', {
-      userId: req.user.uid,
-      email: req.user.email,
-      dbInitialized: !!db
-    });
-
-    const userId = req.user.uid;
+    console.log('🔍 Usage limit check request for user:', req.user.uid);
     
+    // データベースが利用できない場合はデフォルト値を返す
     if (!db) {
-      console.error('❌ Database not available');
-      return res.status(500).json({ error: 'Database not available' });
-    }
-    
-    // ユーザー情報を取得
-    const userDoc = await db.collection('users').doc(userId).get();
-    console.log('📄 User document exists:', userDoc.exists);
-    
-    if (!userDoc.exists) {
-      // 新規ユーザーの場合、初期データを作成
-      console.log('🆕 Creating new user:', userId);
-      await db.collection('users').doc(userId).set({
-        uid: userId,
-        email: req.user.email,
-        name: req.user.name,
-        plan: 'free',
-        monthlyUsage: 0,
-        lastUsageReset: new Date(),
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-      
-      console.log('✅ New user created successfully');
+      console.warn('⚠️ Database not available, returning default values');
       return res.json({
         canUse: true,
         remainingUses: 3,
@@ -433,56 +406,89 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
       });
     }
     
-    const userData = userDoc.data();
-    console.log('📊 User data:', {
-      plan: userData.plan,
-      monthlyUsage: userData.monthlyUsage,
-      lastUsageReset: userData.lastUsageReset
-    });
-
-    const currentDate = new Date();
-    const lastReset = userData.lastUsageReset?.toDate() || new Date(0);
+    const userId = req.user.uid;
     
-    // 月が変わった場合、使用回数をリセット
-    if (currentDate.getMonth() !== lastReset.getMonth() || currentDate.getFullYear() !== lastReset.getFullYear()) {
-      console.log('🔄 Resetting monthly usage for new month');
-      await db.collection('users').doc(userId).update({
-        monthlyUsage: 0,
-        lastUsageReset: currentDate,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+    try {
+      // ユーザー情報を取得
+      const userDoc = await db.collection('users').doc(userId).get();
       
-      return res.json({
-        canUse: true,
-        remainingUses: userData.plan === 'premium' ? -1 : 3, // -1は無制限
-        totalUses: userData.plan === 'premium' ? -1 : 3,
+      if (!userDoc.exists) {
+        // 新規ユーザーの場合、初期データを作成
+        console.log('🆕 Creating new user:', userId);
+        await db.collection('users').doc(userId).set({
+          uid: userId,
+          email: req.user.email,
+          name: req.user.name,
+          plan: 'free',
+          monthlyUsage: 0,
+          lastUsageReset: new Date(),
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return res.json({
+          canUse: true,
+          remainingUses: 3,
+          totalUses: 3,
+          plan: 'free'
+        });
+      }
+      
+      const userData = userDoc.data();
+      const currentDate = new Date();
+      const lastReset = userData.lastUsageReset?.toDate() || new Date(0);
+      
+      // 月が変わった場合、使用回数をリセット
+      if (currentDate.getMonth() !== lastReset.getMonth() || currentDate.getFullYear() !== lastReset.getFullYear()) {
+        await db.collection('users').doc(userId).update({
+          monthlyUsage: 0,
+          lastUsageReset: currentDate,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        return res.json({
+          canUse: true,
+          remainingUses: userData.plan === 'premium' ? -1 : 3,
+          totalUses: userData.plan === 'premium' ? -1 : 3,
+          plan: userData.plan
+        });
+      }
+      
+      // 使用回数制限チェック
+      const maxUses = userData.plan === 'premium' ? -1 : 3;
+      const currentUsage = userData.monthlyUsage || 0;
+      const canUse = maxUses === -1 || currentUsage < maxUses;
+      
+      const result = {
+        canUse,
+        remainingUses: maxUses === -1 ? -1 : Math.max(0, maxUses - currentUsage),
+        totalUses: maxUses,
         plan: userData.plan
+      };
+      
+      console.log('✅ Usage limit result:', result);
+      res.json(result);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      // データベースエラーの場合もデフォルト値を返す
+      res.json({
+        canUse: true,
+        remainingUses: 3,
+        totalUses: 3,
+        plan: 'free'
       });
     }
     
-    // 使用回数制限チェック
-    const maxUses = userData.plan === 'premium' ? -1 : 3;
-    const currentUsage = userData.monthlyUsage || 0;
-    const canUse = maxUses === -1 || currentUsage < maxUses;
-    
-    const result = {
-      canUse,
-      remainingUses: maxUses === -1 ? -1 : Math.max(0, maxUses - currentUsage),
-      totalUses: maxUses,
-      plan: userData.plan
-    };
-    
-    console.log('✅ Usage limit check result:', result);
-    res.json(result);
-    
   } catch (error) {
     console.error('❌ Usage limit check error:', error);
-    console.error('📝 Error details:', {
-      message: error.message,
-      stack: error.stack,
-      userId: req.user?.uid
+    // エラーの場合もデフォルト値を返す（500エラーを避ける）
+    res.json({
+      canUse: true,
+      remainingUses: 3,
+      totalUses: 3,
+      plan: 'free'
     });
-    res.status(500).json({ error: error.message });
   }
 });
 

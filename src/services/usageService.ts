@@ -34,9 +34,16 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
   try {
     const token = await getAuthToken();
     if (!token) {
-      throw new Error('認証トークンが取得できません');
+      console.warn('認証トークンが取得できません - デフォルト値を返します');
+      return {
+        canUse: true,
+        remainingUses: 3,
+        totalUses: 3,
+        plan: 'free'
+      };
     }
 
+    console.log('🔍 Sending usage limit request with token');
     const response = await fetch('/api/usage-limit', {
       method: 'GET',
       headers: {
@@ -45,13 +52,19 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
       },
     });
 
+    console.log('📊 Response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('使用回数制限の確認に失敗しました');
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`使用回数制限の確認に失敗しました (${response.status})`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ Usage limit result:', result);
+    return result;
   } catch (error) {
-    console.error('Usage limit check error:', error);
+    console.error('❌ Usage limit check error:', error);
     // エラー時は無料プランとして扱う
     return {
       canUse: true,
