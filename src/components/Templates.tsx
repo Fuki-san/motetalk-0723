@@ -63,7 +63,13 @@ const Templates = () => {
     };
 
     loadTemplatePurchaseStatus();
-  }, [user, userProfile]);
+
+    // 購入済みモードの場合、定期的に更新
+    if (viewMode === 'purchased') {
+      const interval = setInterval(loadTemplatePurchaseStatus, 5000); // 5秒ごとに更新
+      return () => clearInterval(interval);
+    }
+  }, [user, userProfile, viewMode]);
 
   // テンプレートデータ（実際のデータ）
   const templateCategories: TemplateCategory[] = [

@@ -344,7 +344,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
               </div>
               {!usageLimit.isPremium && usageLimit.remainingUses === 0 && (
                 <button
-                  onClick={() => window.location.href = '/pricing'}
+                  onClick={async () => {
+                    try {
+                      const { purchaseSubscription } = await import('../services/stripeService');
+                      await purchaseSubscription('premium_monthly');
+                    } catch (error) {
+                      console.error('Subscription purchase error:', error);
+                      alert('アップグレードの処理中にエラーが発生しました。');
+                    }
+                  }}
                   className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
                 >
                   <Crown className="w-4 h-4" />
@@ -637,7 +645,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                   <span className="font-semibold text-purple-600">今なら月額1,980円</span>で全ての機能が利用可能
                 </p>
                 <button
-                  onClick={() => window.location.href = '/pricing'}
+                  onClick={async () => {
+                    try {
+                      const { purchaseSubscription } = await import('../services/stripeService');
+                      await purchaseSubscription('premium_monthly');
+                    } catch (error) {
+                      console.error('Subscription purchase error:', error);
+                      alert('アップグレードの処理中にエラーが発生しました。');
+                    }
+                  }}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200"
                 >
                   <Crown className="w-4 h-4 inline mr-2" />
