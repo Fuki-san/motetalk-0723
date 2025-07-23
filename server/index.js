@@ -255,6 +255,7 @@ app.use(express.json());
 // 静的ファイルの配信設定（APIルートの前に配置）
 app.use(express.static(path.join(__dirname, '../dist'), {
   setHeaders: (res, path) => {
+    console.log(`📁 Serving static file: ${path}`);
     // CSSファイルのMIMEタイプを設定
     if (path.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
@@ -288,6 +289,8 @@ app.use((req, res, next) => {
   const hasStaticExtension = staticExtensions.some(ext => req.path.endsWith(ext));
   
   if (hasStaticExtension) {
+    // 静的ファイルが見つからない場合は404エラーを返す
+    console.log(`❌ Static file not found: ${req.path}`);
     return res.status(404).send('Static file not found');
   }
   
