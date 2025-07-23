@@ -110,12 +110,8 @@ export const incrementUsage = async (): Promise<IncrementUsageResponse> => {
     return result;
   } catch (error) {
     console.error('❌ Increment usage error:', error);
-    // エラー時はデフォルト値を返す
-    return {
-      success: true,
-      remainingUses: 2,
-      totalUses: 3
-    };
+    // エラー時はエラーを投げる（デフォルト値を返さない）
+    throw new Error('使用回数の増加に失敗しました');
   }
 };
 

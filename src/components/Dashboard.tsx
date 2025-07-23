@@ -112,10 +112,18 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     setSelectedReplyIndex(null);
     try {
       if (usageLimit && usageLimit.plan === 'free') {
+        // 使用回数を増加
         await incrementUsage();
         // サーバーから最新の使用回数を取得
         const updatedLimit = await checkUsageLimit();
         setUsageLimit(updatedLimit);
+        
+        // 使用回数が0になった場合は処理を停止
+        if (!updatedLimit.canUse) {
+          alert('今月の使用回数上限に達しました。プレミアムプランにアップグレードしてください。');
+          setIsLoading(false);
+          return;
+        }
       }
       const apiConversationHistory: ApiConversationTurn[] = conversation.map(turn => ({
         userMessage: turn.userMessage,

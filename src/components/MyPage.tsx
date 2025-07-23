@@ -4,6 +4,7 @@ import { purchaseSubscription, cancelSubscription, subscriptionPlans, templatePa
 import { useUserData } from '../hooks/useUserData';
 import { useAuth } from '../hooks/useAuth';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { getAuth } from 'firebase/auth';
 
 interface MyPageProps {
   user: { name: string; email: string } | null;
@@ -95,7 +96,13 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     setIsDeleting(true);
     try {
       // 認証トークンを取得
-      const token = await authUser?.getIdToken();
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('ユーザーが認証されていません');
+      }
+      
+      const token = await currentUser.getIdToken();
       if (!token) {
         throw new Error('認証トークンが取得できません');
       }
