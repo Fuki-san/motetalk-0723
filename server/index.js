@@ -851,8 +851,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// SPAのルーティング - API以外のすべてのGETリクエストをindex.htmlにリダイレクト
-app.get('*', (req, res) => {
+// ルートパスの処理
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+// SPAのルーティング - その他のすべてのGETリクエストをindex.htmlにリダイレクト
+app.get('/*', (req, res) => {
   // APIルートは除外
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
