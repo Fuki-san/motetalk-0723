@@ -93,21 +93,26 @@ app.use('/api', cors());
 // JWT認証ミドルウェア
 const authenticateUser = async (req, res, next) => {
   try {
+    console.log('🔐 認証処理開始');
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Authorization header missing or invalid');
       return res.status(401).json({ error: 'Authorization header missing or invalid' });
     }
     
     const idToken = authHeader.split('Bearer ')[1];
+    console.log('🔐 Token extracted, length:', idToken.length);
     
     if (!admin.apps.length) {
       console.error('❌ Firebase Admin未初期化');
       return res.status(500).json({ error: 'Authentication service unavailable' });
     }
     
+    console.log('🔐 Firebase Admin initialized, verifying token...');
     // Firebase ID Tokenを検証
     const decodedToken = await admin.auth().verifyIdToken(idToken);
+    console.log('🔐 Token verified successfully');
     
     // ユーザー情報をリクエストに追加
     req.user = {
@@ -121,6 +126,11 @@ const authenticateUser = async (req, res, next) => {
     
   } catch (error) {
     console.error('❌ JWT認証エラー:', error.message);
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
@@ -812,27 +822,26 @@ app.delete('/api/conversations/:id', authenticateUser, requireAuth, async (req, 
 app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res) => {
   try {
     console.log('🔍 Increment usage request for user:', req.user.uid);
+    console.log('🔍 User data:', { uid: req.user.uid, email: req.user.email });
     
-    // データベースが利用できない場合はデフォルト値を返す
+    // データベースが利用できない場合はエラーを返す
     if (!db) {
-      console.warn('⚠️ Database not available, returning default success');
-      return res.json({ 
-        success: true, 
-        remainingUses: 2,
-        totalUses: 3
-      });
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
     }
     
     const userId = req.user.uid;
+    console.log('🔍 Processing for userId:', userId);
     
     try {
       // ユーザー情報を取得
+      console.log('🔍 Fetching user document...');
       const userDoc = await db.collection('users').doc(userId).get();
       
       if (!userDoc.exists) {
-        console.warn('⚠️ User not found, creating new user');
+        console.log('🆕 User not found, creating new user');
         // ユーザーが存在しない場合は新規作成
-        await db.collection('users').doc(userId).set({
+        const newUserData = {
           uid: userId,
           email: req.user.email,
           name: req.user.name,
@@ -841,16 +850,22 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
           lastUsageReset: new Date(),
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        };
+        console.log('🆕 Creating user with data:', newUserData);
         
-        return res.json({ 
+        await db.collection('users').doc(userId).set(newUserData);
+        
+        const result = { 
           success: true, 
           remainingUses: 2,
           totalUses: 3
-        });
+        };
+        console.log('✅ New user created, returning:', result);
+        return res.json(result);
       }
       
       const userData = userDoc.data();
+      console.log('🔍 Existing user data:', userData);
       
       // プレミアムユーザーは制限なし
       if (userData.plan === 'premium') {
@@ -860,6 +875,8 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
       
       // 無料ユーザーの使用回数制限チェック
       const currentUsage = userData.monthlyUsage || 0;
+      console.log('🔍 Current usage:', currentUsage);
+      
       if (currentUsage >= 3) {
         console.log('❌ Usage limit exceeded:', currentUsage);
         return res.status(403).json({ 
@@ -869,8 +886,11 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
       }
       
       // 使用回数を増加
+      const newUsage = currentUsage + 1;
+      console.log('🔍 Incrementing usage from', currentUsage, 'to', newUsage);
+      
       await db.collection('users').doc(userId).update({
-        monthlyUsage: currentUsage + 1,
+        monthlyUsage: newUsage,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
       
@@ -885,12 +905,28 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
       
     } catch (dbError) {
       console.error('❌ Database operation failed:', dbError);
-      res.status(500).json({ error: 'Failed to increment usage' });
+      console.error('❌ Error details:', {
+        message: dbError.message,
+        stack: dbError.stack,
+        code: dbError.code
+      });
+      res.status(500).json({ 
+        error: 'Failed to increment usage',
+        details: dbError.message 
+      });
     }
     
   } catch (error) {
     console.error('❌ Increment usage error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
@@ -898,34 +934,48 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
 app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
   try {
     console.log('🗑️ アカウント削除リクエスト for user:', req.user.uid);
+    console.log('🗑️ User data:', { uid: req.user.uid, email: req.user.email });
     
     // データベースが利用できない場合はエラーを返す
     if (!db) {
-      console.warn('⚠️ Database not available');
+      console.error('❌ Database not available');
       return res.status(503).json({ error: 'Database not available' });
     }
     
     const userId = req.user.uid;
+    console.log('🗑️ Processing for userId:', userId);
     
     try {
       // ユーザー情報を取得
+      console.log('🗑️ Fetching user document...');
       const userDoc = await db.collection('users').doc(userId).get();
       
       if (!userDoc.exists) {
+        console.log('❌ User not found in database');
         return res.status(404).json({ error: 'User not found' });
       }
       
+      const userData = userDoc.data();
+      console.log('🗑️ User data found:', userData);
+      
       // ユーザーの会話履歴を削除
+      console.log('🗑️ Fetching conversations...');
       const conversationsSnapshot = await db.collection('conversations')
         .where('userId', '==', userId)
         .get();
       
-      const deletePromises = conversationsSnapshot.docs.map(doc => doc.ref.delete());
-      await Promise.all(deletePromises);
+      console.log('🗑️ Found conversations:', conversationsSnapshot.docs.length, '件');
       
-      console.log('🗑️ 会話履歴削除完了:', conversationsSnapshot.docs.length, '件');
+      if (conversationsSnapshot.docs.length > 0) {
+        const deletePromises = conversationsSnapshot.docs.map(doc => doc.ref.delete());
+        await Promise.all(deletePromises);
+        console.log('🗑️ 会話履歴削除完了:', conversationsSnapshot.docs.length, '件');
+      } else {
+        console.log('🗑️ No conversations to delete');
+      }
       
       // ユーザー情報を削除
+      console.log('🗑️ Deleting user document...');
       await db.collection('users').doc(userId).delete();
       
       console.log('✅ アカウント削除成功');
@@ -933,12 +983,28 @@ app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res
       
     } catch (dbError) {
       console.error('❌ Database operation failed:', dbError);
-      res.status(500).json({ error: 'Failed to delete account' });
+      console.error('❌ Error details:', {
+        message: dbError.message,
+        stack: dbError.stack,
+        code: dbError.code
+      });
+      res.status(500).json({ 
+        error: 'Failed to delete account',
+        details: dbError.message 
+      });
     }
     
   } catch (error) {
     console.error('❌ アカウント削除エラー:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
