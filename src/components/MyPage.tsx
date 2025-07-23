@@ -21,25 +21,6 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  if (userDataLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const userData = {
-    name: user?.name || userProfile?.name || 'ユーザー',
-    email: user?.email || userProfile?.email || '',
-    plan: userProfile?.plan === 'premium' ? 'プレミアム' : '無料',
-    subscriptionStatus: userProfile?.subscriptionStatus,
-    purchasedTemplates: userProfile?.purchasedTemplates || []
-  };
-
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
       if (!authUser) return;
@@ -65,6 +46,25 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
 
     fetchPurchaseHistory();
   }, [authUser]);
+
+  if (userDataLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userData = {
+    name: user?.name || userProfile?.name || 'ユーザー',
+    email: user?.email || userProfile?.email || '',
+    plan: userProfile?.plan === 'premium' ? 'プレミアム' : '無料',
+    subscriptionStatus: userProfile?.subscriptionStatus,
+    purchasedTemplates: userProfile?.purchasedTemplates || []
+  };
 
   // テンプレートパック情報を取得
   const getPurchasedTemplateInfo = (templateId: string) => {
