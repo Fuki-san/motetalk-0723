@@ -252,6 +252,35 @@ app.use(cors());
 app.use('/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
+// 静的ファイルの配信設定（APIルートの前に配置）
+app.use(express.static(path.join(__dirname, '../dist'), {
+  setHeaders: (res, path) => {
+    // CSSファイルのMIMEタイプを設定
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+    // JSファイルのMIMEタイプを設定
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+    // SVGファイルのMIMEタイプを設定
+    if (path.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    }
+    // その他のファイルタイプ
+    if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    }
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    }
+    if (path.endsWith('.ico')) {
+      res.setHeader('Content-Type', 'image/x-icon');
+    }
+  },
+  maxAge: '1y' // キャッシュ設定
+}));
+
 // Stripe Checkout Session作成
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
@@ -1826,55 +1855,28 @@ app.get('/', (req, res) => {
   }
 });
 
-// 静的ファイルの配信設定
-app.use(express.static(path.join(__dirname, '../dist'), {
-  setHeaders: (res, path) => {
-    // CSSファイルのMIMEタイプを設定
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-    // JSファイルのMIMEタイプを設定
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
-    // SVGファイルのMIMEタイプを設定
-    if (path.endsWith('.svg')) {
-      res.setHeader('Content-Type', 'image/svg+xml');
-    }
-    // その他のファイルタイプ
-    if (path.endsWith('.png')) {
-      res.setHeader('Content-Type', 'image/png');
-    }
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
-      res.setHeader('Content-Type', 'image/jpeg');
-    }
-    if (path.endsWith('.ico')) {
-      res.setHeader('Content-Type', 'image/x-icon');
-    }
-  },
-  maxAge: '1y' // キャッシュ設定
-}));
-
-// SPAのルーティング - その他のすべてのGETリクエストをindex.htmlにリダイレクト
-app.use((req, res, next) => {
+// SPAのルーティング - 静的ファイル以外のGETリクエストをindex.htmlにリダイレクト
+app.get('*', (req, res) => {
   // APIルートは除外
   if (req.path.startsWith('/api/')) {
-    return next();
+    return res.status(404).json({ error: 'API endpoint not found' });
   }
   
-  // GETリクエストのみ処理
-  if (req.method !== 'GET') {
-    return next();
+  // 静的ファイルの拡張子をチェック
+  const staticExtensions = ['.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
+  const hasStaticExtension = staticExtensions.some(ext => req.path.endsWith(ext));
+  
+  if (hasStaticExtension) {
+    return res.status(404).send('Static file not found');
   }
   
-  // 静的ファイルが存在する場合はそれを返す
-  const filePath = path.join(__dirname, '../dist', req.path);
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    return res.sendFile(filePath);
+  // index.htmlを返す（SPAルーティング）
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Build files not found. Please run npm run build first.');
   }
-  
-  // それ以外はindex.htmlを返す（SPAルーティング）
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // 404エラーハンドラー - すべてのリクエストを処理
