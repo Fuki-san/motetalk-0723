@@ -21,12 +21,12 @@
 
 ## 📚 ドキュメント
 
-- [📖 セットアップガイド](./docs/SETUP.md) - 開発環境の構築手順
-- [🔧 技術仕様](./docs/TECHNICAL.md) - アーキテクチャと技術選定
-- [💡 開発メモ](./docs/DEVELOPMENT.md) - 実装時の気づきと実験結果
-- [🚀 デプロイガイド](./docs/DEPLOYMENT.md) - 本番環境への展開
-- [🧪 テストガイド](./docs/TESTING.md) - テスト手順と結果
-- [📊 トラブルシューティング](./docs/TROUBLESHOOTING.md) - よくある問題と解決策
+- [📖 セットアップガイド](./SETUP.md) - 開発環境の構築手順
+- [🔧 技術仕様](./TECHNICAL.md) - アーキテクチャと技術選定
+- [💡 開発メモ](./DEVELOPMENT.md) - 実装時の気づきと実験結果
+- [🚀 デプロイガイド](./DEPLOYMENT.md) - 本番環境への展開
+- [🧪 テストガイド](./TESTING.md) - テスト手順と結果
+- [📊 トラブルシューティング](./TROUBLESHOOTING.md) - よくある問題と解決策
 
 ## 🚀 クイックスタート
 
@@ -42,7 +42,7 @@ cp .env.example .env
 npm run dev:full
 ```
 
-詳細なセットアップ手順は [セットアップガイド](./docs/SETUP.md) を参照してください。
+詳細なセットアップ手順は [セットアップガイド](./SETUP.md) を参照してください。
 
 ## 📁 プロジェクト構造
 
@@ -62,9 +62,9 @@ motetalk-cursor01-main/
 
 ## 🔗 関連リンク
 
-- [📖 セットアップガイド](./docs/SETUP.md)
-- [🔧 技術仕様](./docs/TECHNICAL.md)
-- [💡 開発メモ](./docs/DEVELOPMENT.md)
-- [🚀 デプロイガイド](./docs/DEPLOYMENT.md)
-- [🧪 テストガイド](./docs/TESTING.md)
-- [📊 トラブルシューティング](./docs/TROUBLESHOOTING.md)
+- [📖 セットアップガイド](./SETUP.md)
+- [🔧 技術仕様](./TECHNICAL.md)
+- [💡 開発メモ](./DEVELOPMENT.md)
+- [🚀 デプロイガイド](./DEPLOYMENT.md)
+- [🧪 テストガイド](./TESTING.md)
+- [📊 トラブルシューティング](./TROUBLESHOOTING.md) 
