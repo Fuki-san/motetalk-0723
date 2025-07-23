@@ -23,13 +23,15 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
 
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
-      if (!authUser) return;
+      // Firebaseの現在のユーザーを直接取得
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
       
       setHistoryLoading(true);
       try {
         const response = await fetch('/api/purchase-history', {
           headers: {
-            'Authorization': `Bearer ${await authUser.getIdToken()}`
+            'Authorization': `Bearer ${await currentUser.getIdToken()}`
           }
         });
         
