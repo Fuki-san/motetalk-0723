@@ -5,6 +5,7 @@ import { useUserData } from '../hooks/useUserData';
 import { useAuth } from '../hooks/useAuth';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { getAuth } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 interface MyPageProps {
   user: { name: string; email: string } | null;
