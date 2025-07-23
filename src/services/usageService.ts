@@ -43,7 +43,6 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
       };
     }
 
-    console.log('🔍 Sending usage limit request with token');
     const response = await fetch('/api/usage-limit', {
       method: 'GET',
       headers: {
@@ -51,8 +50,6 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
         'Authorization': `Bearer ${token}`,
       },
     });
-
-    console.log('📊 Response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -61,7 +58,6 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
     }
 
     const result = await response.json();
-    console.log('✅ Usage limit result:', result);
     return result;
   } catch (error) {
     console.error('❌ Usage limit check error:', error);
@@ -88,7 +84,6 @@ export const incrementUsage = async (): Promise<IncrementUsageResponse> => {
       };
     }
 
-    console.log('🔍 Sending increment usage request with token');
     const response = await fetch('/api/increment-usage', {
       method: 'POST',
       headers: {
@@ -96,8 +91,6 @@ export const incrementUsage = async (): Promise<IncrementUsageResponse> => {
         'Authorization': `Bearer ${token}`,
       },
     });
-
-    console.log('📊 Response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -106,7 +99,6 @@ export const incrementUsage = async (): Promise<IncrementUsageResponse> => {
     }
 
     const result = await response.json();
-    console.log('✅ Increment usage result:', result);
     return result;
   } catch (error) {
     console.error('❌ Increment usage error:', error);

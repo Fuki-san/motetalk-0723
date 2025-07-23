@@ -110,44 +110,21 @@ app.use('/api', cors());
 // JWT認証ミドルウェア
 const authenticateUser = async (req, res, next) => {
   try {
-    console.log('🔐 認証処理開始');
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('❌ Authorization header missing or invalid');
       return res.status(401).json({ error: 'Authorization header missing or invalid' });
     }
     
     const idToken = authHeader.split('Bearer ')[1];
-    console.log('🔐 Token extracted, length:', idToken.length);
     
     if (!admin.apps.length) {
-      console.error('❌ Firebase Admin未初期化 - 認証をバイパス');
-      // Firebase Adminが初期化されていない場合、トークンからユーザー情報を抽出
-      try {
-        // JWTトークンをデコード（検証なし）
-        const tokenParts = idToken.split('.');
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-          req.user = {
-            uid: payload.user_id || payload.sub,
-            email: payload.email,
-            name: payload.name || payload.email
-          };
-          console.log('⚠️ Firebase Admin未初期化 - 認証をバイパス:', req.user.email);
-          next();
-          return;
-        }
-      } catch (decodeError) {
-        console.error('❌ Token decode error:', decodeError);
-      }
+      console.error('❌ Firebase Admin not initialized');
       return res.status(500).json({ error: 'Authentication service unavailable' });
     }
     
-    console.log('🔐 Firebase Admin initialized, verifying token...');
     // Firebase ID Tokenを検証
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    console.log('🔐 Token verified successfully');
     
     // ユーザー情報をリクエストに追加
     req.user = {
@@ -156,37 +133,10 @@ const authenticateUser = async (req, res, next) => {
       name: decodedToken.name || decodedToken.email
     };
     
-    console.log('✅ ユーザー認証成功:', req.user.email);
     next();
     
   } catch (error) {
-    console.error('❌ JWT認証エラー:', error.message);
-    console.error('❌ Error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code
-    });
-    
-    // Firebase認証エラーの場合、トークンからユーザー情報を抽出
-    if (error.code === 16 || error.message.includes('UNAUTHENTICATED')) {
-      try {
-        const tokenParts = idToken.split('.');
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-          req.user = {
-            uid: payload.user_id || payload.sub,
-            email: payload.email,
-            name: payload.name || payload.email
-          };
-          console.log('⚠️ Firebase認証エラー - 認証をバイパス:', req.user.email);
-          next();
-          return;
-        }
-      } catch (decodeError) {
-        console.error('❌ Token decode error:', decodeError);
-      }
-    }
-    
+    console.error('❌ Authentication error:', error.message);
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
@@ -459,11 +409,10 @@ app.post('/api/user-settings', authenticateUser, requireAuth, async (req, res) =
 // 使用回数制限チェックAPI
 app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
   try {
-    console.log('🔍 Usage limit check request for user:', req.user.uid);
+    const userId = req.user.uid;
     
     // データベースが利用できない場合はデフォルト値を返す
     if (!db) {
-      console.warn('⚠️ Database not available, returning default values');
       return res.json({
         canUse: true,
         remainingUses: 3,
@@ -472,15 +421,12 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
       });
     }
     
-    const userId = req.user.uid;
-    
     try {
       // ユーザー情報を取得
       const userDoc = await db.collection('users').doc(userId).get();
       
       if (!userDoc.exists) {
         // 新規ユーザーの場合、初期データを作成
-        console.log('🆕 Creating new user:', userId);
         await db.collection('users').doc(userId).set({
           uid: userId,
           email: req.user.email,
@@ -532,7 +478,6 @@ app.get('/api/usage-limit', authenticateUser, requireAuth, async (req, res) => {
         plan: userData.plan
       };
       
-      console.log('✅ Usage limit result:', result);
       res.json(result);
       
     } catch (dbError) {
@@ -877,9 +822,6 @@ app.delete('/api/conversations/:id', authenticateUser, requireAuth, async (req, 
 // 使用回数増加API
 app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res) => {
   try {
-    console.log('🔍 Increment usage request for user:', req.user.uid);
-    console.log('🔍 User data:', { uid: req.user.uid, email: req.user.email });
-    
     // データベースが利用できない場合はエラーを返す
     if (!db) {
       console.error('❌ Database not available');
@@ -887,15 +829,12 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
     }
     
     const userId = req.user.uid;
-    console.log('🔍 Processing for userId:', userId);
     
     try {
       // ユーザー情報を取得
-      console.log('🔍 Fetching user document...');
       const userDoc = await db.collection('users').doc(userId).get();
       
       if (!userDoc.exists) {
-        console.log('🆕 User not found, creating new user');
         // ユーザーが存在しない場合は新規作成
         const newUserData = {
           uid: userId,
@@ -907,7 +846,6 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
-        console.log('🆕 Creating user with data:', newUserData);
         
         await db.collection('users').doc(userId).set(newUserData);
         
@@ -916,25 +854,20 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
           remainingUses: 2,
           totalUses: 3
         };
-        console.log('✅ New user created, returning:', result);
         return res.json(result);
       }
       
       const userData = userDoc.data();
-      console.log('🔍 Existing user data:', userData);
       
       // プレミアムユーザーは制限なし
       if (userData.plan === 'premium') {
-        console.log('👑 Premium user - no usage limit');
         return res.json({ success: true, remainingUses: -1 });
       }
       
       // 無料ユーザーの使用回数制限チェック
       const currentUsage = userData.monthlyUsage || 0;
-      console.log('🔍 Current usage:', currentUsage);
       
       if (currentUsage >= 3) {
-        console.log('❌ Usage limit exceeded:', currentUsage);
         return res.status(403).json({ 
           error: 'Monthly usage limit exceeded',
           message: '今月の使用回数上限に達しました。プレミアムプランにアップグレードしてください。'
@@ -943,7 +876,6 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
       
       // 使用回数を増加
       const newUsage = currentUsage + 1;
-      console.log('🔍 Incrementing usage from', currentUsage, 'to', newUsage);
       
       await db.collection('users').doc(userId).update({
         monthlyUsage: newUsage,
@@ -956,16 +888,10 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
         totalUses: 3
       };
       
-      console.log('✅ Increment usage result:', result);
       res.json(result);
       
     } catch (dbError) {
       console.error('❌ Database operation failed:', dbError);
-      console.error('❌ Error details:', {
-        message: dbError.message,
-        stack: dbError.stack,
-        code: dbError.code
-      });
       res.status(500).json({ 
         error: 'Failed to increment usage',
         details: dbError.message 
