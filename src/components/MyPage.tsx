@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Crown, CreditCard, Settings, Bell, Shield, Download, Trash2, Star, Check } from 'lucide-react';
 import { purchaseSubscription, cancelSubscription, subscriptionPlans, templatePacks } from '../services/stripeService';
 import { useUserData } from '../hooks/useUserData';
@@ -288,71 +288,6 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                   <button className="text-purple-600 hover:text-purple-700 text-sm">
                     変更
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'purchases':
-        return (
-          <div className="space-y-6">
-            {userData.purchasedTemplates.length > 0 ? (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">購入済みテンプレート</h3>
-                <div className="space-y-4">
-                  {userData.purchasedTemplates.map((templateId) => {
-                    const templateInfo = getPurchasedTemplateInfo(templateId);
-                    if (!templateInfo) return null;
-                    
-                    return (
-                      <div key={templateId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Star className="w-6 h-6 text-yellow-500" />
-                          <div>
-                            <div className="font-medium text-gray-800">{templateInfo.name}</div>
-                            <div className="text-sm text-gray-600">購入日: {templateInfo.purchaseDate}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <span className="font-semibold text-purple-600">¥{templateInfo.price.toLocaleString()}</span>
-                          <button className="p-2 text-gray-400 hover:text-purple-600 transition-colors">
-                            <Download className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
-                <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">購入済みテンプレートがありません</h3>
-                <p className="text-gray-600 mb-4">テンプレートを購入すると、ここに表示されます</p>
-                <button 
-                  onClick={() => {
-                    // App.tsxのsetCurrentPageを呼び出すため、親コンポーネントに通知
-                    window.dispatchEvent(new CustomEvent('navigate', { detail: 'templates' }));
-                  }}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
-                >
-                  テンプレートを見る
-                </button>
-              </div>
-            )}
-
-            {userData.plan === 'プレミアム' && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">請求履歴</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border-b border-gray-100">
-                    <div>
-                      <div className="font-medium text-gray-800">プレミアムプラン</div>
-                      <div className="text-sm text-gray-600">継続課金中</div>
-                    </div>
-                    <span className="font-semibold text-gray-800">¥1,980/月</span>
-                  </div>
                 </div>
               </div>
             )}

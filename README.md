@@ -27,6 +27,8 @@
 - [🚀 デプロイガイド](./docs/DEPLOYMENT.md) - 本番環境への展開
 - [🧪 テストガイド](./docs/TESTING.md) - テスト手順と結果
 - [📊 トラブルシューティング](./docs/TROUBLESHOOTING.md) - よくある問題と解決策
+- [🔧 リファクタリングガイド](./docs/REFACTORING.md) - コード品質とリファクタリング方針
+- [🎨 デザインガイドライン](./docs/DESIGN.md) - UI/UXデザイン仕様とコンポーネント
 
 ## 🚀 クイックスタート
 

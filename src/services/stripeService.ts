@@ -268,16 +268,4 @@ export const checkTemplatePurchaseStatus = async () => {
   }
 };
 
-// 認証トークンを取得するヘルパー関数
-const getAuthToken = async (): Promise<string> => {
-  // Firebase AuthからIDトークンを取得
-  const { getAuth } = await import('firebase/auth');
-  const auth = getAuth();
-  const user = auth.currentUser;
-  
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
-  
-  return await user.getIdToken();
-};
+import { getAuthToken } from './authUtils';
