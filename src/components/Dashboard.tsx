@@ -83,10 +83,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
   const loadUsageLimit = async () => {
     if (isAuthenticated && authUser) {
       try {
+        console.log('🔍 Loading usage limit for user:', authUser.email);
         setUsageLoading(true);
         const limit = await checkUsageLimit();
+        console.log('✅ Usage limit loaded:', limit);
         setUsageLimit(limit);
       } catch (error) {
+        console.error('❌ Failed to load usage limit:', error);
         setUsageLimit({
           canUse: true,
           remainingUses: 3,
@@ -97,6 +100,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
         setUsageLoading(false);
       }
     } else {
+      console.log('🔍 No authenticated user, clearing usage limit');
       setUsageLimit(null);
       setUsageLoading(false);
     }
@@ -112,15 +116,27 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     setSelectedReplyIndex(null);
     try {
       if (usageLimit && usageLimit.plan === 'free') {
-        // 使用回数を増加
-        await incrementUsage();
-        // サーバーから最新の使用回数を取得
-        const updatedLimit = await checkUsageLimit();
-        setUsageLimit(updatedLimit);
-        
-        // 使用回数が0になった場合は処理を停止
-        if (!updatedLimit.canUse) {
-          alert('今月の使用回数上限に達しました。プレミアムプランにアップグレードしてください。');
+        try {
+          // 使用回数を増加
+          console.log('🔍 Incrementing usage for free user');
+          await incrementUsage();
+          
+          // サーバーから最新の使用回数を取得
+          console.log('🔍 Fetching updated usage limit');
+          const updatedLimit = await checkUsageLimit();
+          setUsageLimit(updatedLimit);
+          
+          console.log('✅ Updated usage limit:', updatedLimit);
+          
+          // 使用回数が0になった場合は処理を停止
+          if (!updatedLimit.canUse) {
+            alert('今月の使用回数上限に達しました。プレミアムプランにアップグレードしてください。');
+            setIsLoading(false);
+            return;
+          }
+        } catch (usageError) {
+          console.error('❌ Usage increment failed:', usageError);
+          alert('使用回数の更新に失敗しました。もう一度お試しください。');
           setIsLoading(false);
           return;
         }

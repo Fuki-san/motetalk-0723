@@ -116,11 +116,16 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
         },
       });
 
+      console.log('📊 Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('アカウント削除に失敗しました');
+        const errorText = await response.text();
+        console.error('❌ API Error:', response.status, errorText);
+        throw new Error(`アカウント削除に失敗しました (${response.status})`);
       }
 
       const result = await response.json();
+      console.log('✅ Account deletion result:', result);
       
       if (result.success) {
         alert('アカウントが正常に削除されました。ご利用いただき、ありがとうございました。');
