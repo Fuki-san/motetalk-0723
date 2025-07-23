@@ -1,4 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
+import { getAuth } from 'firebase/auth';
 
 export interface UsageLimit {
   canUse: boolean;
@@ -13,13 +14,34 @@ export interface IncrementUsageResponse {
   totalUses: number;
 }
 
+// 認証トークンを取得
+const getAuthToken = async (): Promise<string | null> => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      return await user.getIdToken();
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to get auth token:', error);
+    return null;
+  }
+};
+
 // 使用回数制限をチェック
 export const checkUsageLimit = async (): Promise<UsageLimit> => {
   try {
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error('認証トークンが取得できません');
+    }
+
     const response = await fetch('/api/usage-limit', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
@@ -43,10 +65,16 @@ export const checkUsageLimit = async (): Promise<UsageLimit> => {
 // 使用回数を増加
 export const incrementUsage = async (): Promise<IncrementUsageResponse> => {
   try {
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error('認証トークンが取得できません');
+    }
+
     const response = await fetch('/api/increment-usage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
