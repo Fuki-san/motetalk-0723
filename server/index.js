@@ -62,21 +62,29 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// セキュリティヘッダーの設定
+// セキュリティヘッダーの設定（開発環境では緩和）
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: https://api.stripe.com https://accounts.google.com https://www.googleapis.com; frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com;");
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
+  if (process.env.NODE_ENV === 'production') {
+    // 本番環境では基本的なセキュリティヘッダーのみ
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+  }
   next();
 });
 
 // 静的ファイルの配信設定
-app.use(express.static(path.join(__dirname, '../dist')));
+const staticPath = path.join(__dirname, '../dist');
+app.use(express.static(staticPath, {
+  maxAge: '1h',
+  etag: true,
+  lastModified: true
+}));
 
 // デバッグ用ログ
-console.log('📁 静的ファイルパス:', path.join(__dirname, '../dist'));
-console.log('🔍 静的ファイル存在確認:', fs.existsSync(path.join(__dirname, '../dist/index.html')));
+console.log('📁 静的ファイルパス:', staticPath);
+console.log('🔍 静的ファイル存在確認:', fs.existsSync(path.join(staticPath, 'index.html')));
+console.log('📁 静的ファイル一覧:', fs.readdirSync(staticPath));
 
 // APIルートのプレフィックス
 app.use('/api', cors());
