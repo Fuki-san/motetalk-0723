@@ -67,7 +67,8 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     // 本番環境では基本的なセキュリティヘッダーのみ
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    // Cross-Origin-Opener-Policyを緩和してGoogleログインを許可
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     res.setHeader('X-XSS-Protection', '1; mode=block');
   }
   next();
@@ -101,14 +102,8 @@ const authenticateUser = async (req, res, next) => {
     const idToken = authHeader.split('Bearer ')[1];
     
     if (!admin.apps.length) {
-      console.error('❌ Firebase Admin未初期化 - 認証をスキップ');
-      // 開発環境用のモックユーザー
-      req.user = {
-        uid: 'demo-user-id',
-        email: 'demo@example.com',
-        name: 'デモユーザー'
-      };
-      return next();
+      console.error('❌ Firebase Admin未初期化');
+      return res.status(500).json({ error: 'Authentication service unavailable' });
     }
     
     // Firebase ID Tokenを検証
