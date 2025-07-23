@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { pushNotificationService } from '../services/pushNotificationService';
+import { emailNotificationService } from '../services/emailNotificationService';
 
 export interface UserSettings {
   notifications: {
@@ -32,13 +36,31 @@ export const useUserSettings = () => {
     const loadSettings = async () => {
       if (user) {
         try {
-          // LocalStorageから設定を読み込み（実際の実装ではFirestoreから取得）
-          const savedSettings = localStorage.getItem(`user_settings_${user.uid}`);
-          if (savedSettings) {
-            setSettings(JSON.parse(savedSettings));
+          // Firestoreから設定を読み込み
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists() && userDoc.data().settings) {
+            const firestoreSettings = userDoc.data().settings;
+            setSettings({
+              notifications: {
+                email: firestoreSettings.notifications?.email ?? defaultSettings.notifications.email,
+                push: firestoreSettings.notifications?.push ?? defaultSettings.notifications.push,
+              },
+              privacy: {
+                saveConversationHistory: firestoreSettings.privacy?.saveConversationHistory ?? defaultSettings.privacy.saveConversationHistory,
+              },
+            });
+          } else {
+            // 新規ユーザーの場合、デフォルト設定をFirestoreに保存
+            await updateDoc(doc(db, 'users', user.uid), {
+              settings: defaultSettings,
+              updatedAt: serverTimestamp()
+            });
+            setSettings(defaultSettings);
           }
         } catch (error) {
           console.error('Failed to load user settings:', error);
+          // エラー時はデフォルト設定を使用
+          setSettings(defaultSettings);
         }
       }
       setLoading(false);
@@ -66,14 +88,11 @@ export const useUserSettings = () => {
         },
       };
 
-      // LocalStorageに保存（実際の実装ではFirestoreに保存）
-      localStorage.setItem(`user_settings_${user.uid}`, JSON.stringify(updatedSettings));
-      
-      // 実際の実装では以下のようにFirestoreに保存
-      // await updateDoc(doc(db, 'users', user.uid), {
-      //   settings: updatedSettings,
-      //   updatedAt: serverTimestamp()
-      // });
+      // Firestoreに保存
+      await updateDoc(doc(db, 'users', user.uid), {
+        settings: updatedSettings,
+        updatedAt: serverTimestamp()
+      });
 
       setSettings(updatedSettings);
 
@@ -91,36 +110,100 @@ export const useUserSettings = () => {
 
   // 設定変更を適用
   const applySettingsChanges = async (newSettings: UserSettings) => {
+    if (!user) return;
+
     // メール通知設定
     if (newSettings.notifications.email) {
       console.log('📧 メール通知を有効化');
-      // 実際の実装では、バックエンドAPIを呼び出してメール配信リストに追加
+      try {
+        await emailNotificationService.enableEmailNotifications(user.uid, user.email);
+      } catch (error) {
+        console.error('❌ メール通知の有効化に失敗:', error);
+      }
     } else {
       console.log('📧 メール通知を無効化');
-      // メール配信リストから削除
+      try {
+        await emailNotificationService.disableEmailNotifications(user.uid);
+      } catch (error) {
+        console.error('❌ メール通知の無効化に失敗:', error);
+      }
     }
 
     // プッシュ通知設定
     if (newSettings.notifications.push) {
       console.log('🔔 プッシュ通知を有効化');
-      // Push API の許可を要求
-      if ('Notification' in window && 'serviceWorker' in navigator) {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          console.log('✅ プッシュ通知の許可を取得');
-          // Service Workerを登録してプッシュ通知を設定
+      try {
+        // Service Workerを登録
+        const registered = await pushNotificationService.registerServiceWorker();
+        if (registered) {
+          // プッシュ通知の許可を要求
+          const permission = await pushNotificationService.requestPermission();
+          if (permission === 'granted') {
+            // プッシュ通知を購読
+            const subscription = await pushNotificationService.subscribeToPush();
+            if (subscription) {
+              // サーバーに購読情報を送信
+              const token = await user.getIdToken();
+              await fetch('/api/push-subscription', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  subscription: subscription.toJSON()
+                }),
+              });
+              console.log('✅ プッシュ通知を有効化しました');
+            }
+          }
         }
+      } catch (error) {
+        console.error('❌ プッシュ通知の有効化に失敗:', error);
       }
     } else {
       console.log('🔔 プッシュ通知を無効化');
+      try {
+        // プッシュ通知の購読を解除
+        await pushNotificationService.unsubscribeFromPush();
+        
+        // サーバーから購読情報を削除
+        const token = await user.getIdToken();
+        await fetch('/api/push-subscription', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        console.log('✅ プッシュ通知を無効化しました');
+      } catch (error) {
+        console.error('❌ プッシュ通知の無効化に失敗:', error);
+      }
     }
 
     // 会話履歴保存設定
     if (!newSettings.privacy.saveConversationHistory) {
       console.log('🗑️ 既存の会話履歴を削除');
-      // 実際の実装では、ユーザーの会話履歴をデータベースから削除
-      // await deleteCollection(collection(db, 'conversations'), 
-      //   where('userId', '==', user.uid));
+      try {
+        // バックエンドAPIを呼び出して会話履歴を削除
+        const token = await user.getIdToken();
+        const response = await fetch('/api/delete-conversations', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          console.log('✅ 会話履歴を削除しました');
+        } else {
+          console.error('❌ 会話履歴の削除に失敗しました');
+        }
+      } catch (error) {
+        console.error('❌ 会話履歴削除エラー:', error);
+      }
     }
   };
 

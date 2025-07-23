@@ -912,6 +912,264 @@ app.post('/api/increment-usage', authenticateUser, requireAuth, async (req, res)
   }
 });
 
+// メール通知購読管理API
+app.post('/api/email-subscription', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📧 メール通知購読リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const { email, enabled } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email address required' });
+    }
+    
+    try {
+      // ユーザーのメール通知設定を保存
+      await db.collection('users').doc(userId).update({
+        emailNotifications: {
+          enabled: enabled || true,
+          email: email,
+          subscribedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log('✅ メール通知設定を保存しました');
+      res.json({ success: true, message: 'メール通知を有効化しました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to save email subscription',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Email subscription error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+app.delete('/api/email-subscription', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📧 メール通知購読削除リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザーのメール通知設定を削除
+      await db.collection('users').doc(userId).update({
+        emailNotifications: admin.firestore.FieldValue.delete(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log('✅ メール通知設定を削除しました');
+      res.json({ success: true, message: 'メール通知を無効化しました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to delete email subscription',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Email subscription deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+app.get('/api/email-subscription/:userId', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📧 メール通知状態確認リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザーのメール通知設定を取得
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const emailNotifications = userData.emailNotifications;
+        
+        res.json({ 
+          enabled: emailNotifications?.enabled || false,
+          email: emailNotifications?.email || null
+        });
+      } else {
+        res.json({ enabled: false, email: null });
+      }
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to get email subscription',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Email subscription status error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// プッシュ通知購読管理API
+app.post('/api/push-subscription', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🔔 プッシュ通知購読リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    const { subscription } = req.body;
+    
+    if (!subscription) {
+      return res.status(400).json({ error: 'Subscription data required' });
+    }
+    
+    try {
+      // ユーザーのプッシュ通知購読情報を保存
+      await db.collection('users').doc(userId).update({
+        pushSubscription: subscription,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log('✅ プッシュ通知購読情報を保存しました');
+      res.json({ success: true, message: 'プッシュ通知購読を登録しました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to save push subscription',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Push subscription error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+app.delete('/api/push-subscription', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🔔 プッシュ通知購読削除リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザーのプッシュ通知購読情報を削除
+      await db.collection('users').doc(userId).update({
+        pushSubscription: admin.firestore.FieldValue.delete(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log('✅ プッシュ通知購読情報を削除しました');
+      res.json({ success: true, message: 'プッシュ通知購読を削除しました' });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to delete push subscription',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Push subscription deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// 会話履歴削除API
+app.delete('/api/delete-conversations', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('🗑️ 会話履歴削除リクエスト for user:', req.user.uid);
+    
+    if (!db) {
+      console.error('❌ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザーの会話履歴を削除
+      console.log('🗑️ 会話履歴を削除中...');
+      const conversationsRef = db.collection('conversations');
+      const conversationsQuery = await conversationsRef.where('userId', '==', userId).get();
+      
+      const deletePromises = conversationsQuery.docs.map(doc => doc.ref.delete());
+      await Promise.all(deletePromises);
+      
+      console.log('🗑️ 会話履歴削除完了:', conversationsQuery.docs.length, '件');
+      
+      res.json({ 
+        success: true, 
+        message: '会話履歴が正常に削除されました',
+        deletedCount: conversationsQuery.docs.length
+      });
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ 
+        error: 'Failed to delete conversations',
+        details: dbError.message 
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Conversation deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // アカウント削除
 app.delete('/api/delete-account', authenticateUser, requireAuth, async (req, res) => {
   try {
