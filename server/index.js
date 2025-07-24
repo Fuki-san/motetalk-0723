@@ -195,6 +195,9 @@ app.use(express.static(staticPath, {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+    // 追加のヘッダーでキャッシュを確実に無効化
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
   }
 }));
 
@@ -1874,7 +1877,31 @@ app.get('/', (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.sendFile(indexPath);
+    
+    // HTMLファイルを読み込んで動的に更新
+    let htmlContent = fs.readFileSync(indexPath, 'utf8');
+    
+    // 現在のビルドファイルを検出
+    const distFiles = fs.readdirSync(path.join(__dirname, '../dist'));
+    const jsFile = distFiles.find(file => file.endsWith('.js') && file.startsWith('index-'));
+    const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
+    
+    if (jsFile && cssFile) {
+      // HTML内のファイル名を現在のビルドファイルに置換
+      htmlContent = htmlContent.replace(
+        /src="\/index-[^"]+\.js"/g,
+        `src="/${jsFile}"`
+      );
+      htmlContent = htmlContent.replace(
+        /href="\/index-[^"]+\.css"/g,
+        `href="/${cssFile}"`
+      );
+      
+      console.log(`🔄 HTMLファイルを動的更新: ${jsFile}, ${cssFile}`);
+    }
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(htmlContent);
   } else {
     res.status(404).send('Build files not found. Please run npm run build first.');
   }
@@ -1908,7 +1935,31 @@ app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.sendFile(indexPath);
+    
+    // HTMLファイルを読み込んで動的に更新
+    let htmlContent = fs.readFileSync(indexPath, 'utf8');
+    
+    // 現在のビルドファイルを検出
+    const distFiles = fs.readdirSync(path.join(__dirname, '../dist'));
+    const jsFile = distFiles.find(file => file.endsWith('.js') && file.startsWith('index-'));
+    const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
+    
+    if (jsFile && cssFile) {
+      // HTML内のファイル名を現在のビルドファイルに置換
+      htmlContent = htmlContent.replace(
+        /src="\/index-[^"]+\.js"/g,
+        `src="/${jsFile}"`
+      );
+      htmlContent = htmlContent.replace(
+        /href="\/index-[^"]+\.css"/g,
+        `href="/${cssFile}"`
+      );
+      
+      console.log(`🔄 SPAルーティングでHTMLファイルを動的更新: ${jsFile}, ${cssFile}`);
+    }
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(htmlContent);
   } else {
     console.log(`❌ index.html not found: ${indexPath}`);
     res.status(404).send('Build files not found. Please run npm run build first.');

@@ -4,44 +4,75 @@ MoteTalkプロジェクトでよく発生する問題とその解決策につい
 
 ## 🚨 よくある問題
 
-### 1. 静的ファイル配信エラー
+### 1. SPAキャッシュ問題（重要）
 
 #### 症状
 ```
-Refused to apply style from 'https://motetalk-0723.onrender.com/index-D4L134hE.css' because its MIME type ('text/html') is not a supported stylesheet MIME type
+❌ Static file not found: /index-gfGlGWnJ.js
+❌ Static file not found: /index-D4L134hE.css
+Refused to apply style from '...' because its MIME type ('text/html') is not a supported stylesheet MIME type
 ```
 
 #### 原因
-- 静的ファイルが見つからない場合に`index.html`が返される
-- ブラウザキャッシュの問題
-- Express.jsの静的ファイル配信設定の問題
+- ブラウザが古いビルドファイル名をキャッシュしている
+- HTMLファイル内のファイル名と実際のビルドファイル名が不一致
+- 静的ファイル配信の設定が不適切
+- Viteのハッシュ付きファイル名によるキャッシュバスティングの問題
 
 #### 解決策
-1. **ブラウザキャッシュのクリア**
-   ```bash
-   # Chrome/Firefox: Cmd+Shift+R (Mac) または Ctrl+Shift+R (Windows)
-   ```
 
-2. **静的ファイル配信の確認**
-   ```javascript
-   // server/index.js
-   app.use(express.static(path.join(__dirname, '../dist'), {
-     setHeaders: (res, path) => {
-       if (path.endsWith('.css')) {
-         res.setHeader('Content-Type', 'text/css');
-       }
-       if (path.endsWith('.js')) {
-         res.setHeader('Content-Type', 'application/javascript');
-       }
-     }
-   }));
-   ```
+##### 1. サーバー側での動的HTML生成
+```javascript
+// HTMLファイルを読み込んで動的に更新
+let htmlContent = fs.readFileSync(indexPath, 'utf8');
 
-3. **ビルドファイルの確認**
-   ```bash
-   npm run build
-   ls -la dist/
-   ```
+// 現在のビルドファイルを検出
+const distFiles = fs.readdirSync(path.join(__dirname, '../dist'));
+const jsFile = distFiles.find(file => file.endsWith('.js') && file.startsWith('index-'));
+const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
+
+if (jsFile && cssFile) {
+  // HTML内のファイル名を現在のビルドファイルに置換
+  htmlContent = htmlContent.replace(
+    /src="\/index-[^"]+\.js"/g,
+    `src="/${jsFile}"`
+  );
+  htmlContent = htmlContent.replace(
+    /href="\/index-[^"]+\.css"/g,
+    `href="/${cssFile}"`
+  );
+}
+```
+
+##### 2. キャッシュ制御ヘッダーの設定
+```javascript
+// キャッシュ制御ヘッダーを設定
+res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+res.setHeader('Pragma', 'no-cache');
+res.setHeader('Expires', '0');
+res.setHeader('Surrogate-Control', 'no-store');
+res.setHeader('X-Content-Type-Options', 'nosniff');
+```
+
+##### 3. 静的ファイル配信の改善
+```javascript
+app.use(express.static(staticPath, {
+  maxAge: '0',
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, path) => {
+    // MIMEタイプとキャッシュ制御を設定
+  }
+}));
+```
+
+#### 予防策
+- 本番環境では適切なキャッシュ戦略を実装
+- ビルド時にファイル名の一貫性を確保
+- デプロイ後のハードリフレッシュを推奨
+- 開発環境ではキャッシュを無効化
+
+### 2. 静的ファイル配信エラー
 
 ### 2. path-to-regexpエラー
 
