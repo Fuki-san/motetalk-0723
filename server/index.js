@@ -779,6 +779,103 @@ app.get('/api/conversations', authenticateUser, requireAuth, async (req, res) =>
   }
 });
 
+// ユーザープロフィール取得API
+app.get('/api/user-profile', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('👤 ユーザープロフィール取得リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // ユーザー情報を取得
+      const userDoc = await db.collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        // ユーザーが存在しない場合は新規作成
+        const defaultProfile = {
+          uid: userId,
+          email: req.user.email || '',
+          name: req.user.name || 'ユーザー',
+          photoURL: req.user.picture,
+          plan: 'free',
+          subscriptionStatus: undefined,
+          purchasedTemplates: [],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        await db.collection('users').doc(userId).set(defaultProfile);
+        
+        console.log('✅ 新規ユーザープロフィール作成:', userId);
+        res.json(defaultProfile);
+        return;
+      }
+      
+      const userData = userDoc.data();
+      
+      // 購入履歴から最新のサブスクリプション状態を確認
+      const subscriptionDoc = await db.collection('purchases')
+        .where('userId', '==', userId)
+        .where('type', '==', 'subscription')
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+      
+      let currentPlan = userData.plan || 'free';
+      let subscriptionStatus = userData.subscriptionStatus;
+      
+      if (!subscriptionDoc.empty) {
+        const latestSubscription = subscriptionDoc.docs[0].data();
+        if (latestSubscription.status === 'completed') {
+          currentPlan = 'premium';
+          subscriptionStatus = 'active';
+        }
+      }
+      
+      // 購入済みテンプレートを取得
+      const templatePurchases = await db.collection('purchases')
+        .where('userId', '==', userId)
+        .where('type', '==', 'template')
+        .get();
+      
+      const purchasedTemplates = templatePurchases.docs.map(doc => doc.data().templateId);
+      
+      const profile = {
+        uid: userId,
+        email: userData.email || req.user.email || '',
+        name: userData.name || req.user.name || 'ユーザー',
+        photoURL: userData.photoURL || req.user.picture,
+        plan: currentPlan,
+        subscriptionId: userData.subscriptionId,
+        subscriptionStatus: subscriptionStatus,
+        purchasedTemplates: purchasedTemplates
+      };
+      
+      console.log('✅ ユーザープロフィール取得成功:', {
+        uid: userId,
+        plan: currentPlan,
+        purchasedTemplates: purchasedTemplates.length
+      });
+      
+      res.json(profile);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to get user profile' });
+    }
+    
+  } catch (error) {
+    console.error('❌ ユーザープロフィール取得エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // 購入履歴取得API
 app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res) => {
   try {
