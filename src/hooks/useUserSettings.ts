@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { pushNotificationService } from '../services/pushNotificationService';
 import { emailNotificationService } from '../services/emailNotificationService';
@@ -39,7 +39,7 @@ export const useUserSettings = () => {
         try {
           // Firestoreから設定を読み込み
           const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists() && userDoc.data().settings) {
+          if (userDoc.exists() && userDoc.data()?.settings) {
             const firestoreSettings = userDoc.data().settings;
             setSettings({
               notifications: {
@@ -52,16 +52,25 @@ export const useUserSettings = () => {
             });
           } else {
             // 新規ユーザーの場合、デフォルト設定をFirestoreに保存
-            await updateDoc(doc(db, 'users', user.uid), {
+            console.log('🆕 新規ユーザーの設定を初期化:', user.uid);
+            await setDoc(doc(db, 'users', user.uid), {
               settings: defaultSettings,
               updatedAt: serverTimestamp()
-            });
+            }, { merge: true });
             setSettings(defaultSettings);
           }
         } catch (error) {
           console.error('Failed to load user settings:', error);
           // エラー時はデフォルト設定を使用
           setSettings(defaultSettings);
+          // エラーの詳細をログに出力
+          if (error instanceof Error) {
+            console.error('Error details:', {
+              message: error.message,
+              name: error.name,
+              stack: error.stack
+            });
+          }
         }
       }
       setLoading(false);
@@ -89,11 +98,11 @@ export const useUserSettings = () => {
         },
       };
 
-      // Firestoreに保存
-      await updateDoc(doc(db, 'users', user.uid), {
+      // Firestoreに保存（存在しない場合は作成、存在する場合は更新）
+      await setDoc(doc(db, 'users', user.uid), {
         settings: updatedSettings,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
 
       setSettings(updatedSettings);
 
@@ -103,6 +112,14 @@ export const useUserSettings = () => {
       console.log('✅ 設定が保存されました:', updatedSettings);
     } catch (error) {
       console.error('❌ 設定の保存に失敗しました:', error);
+      // エラーの詳細をログに出力
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+      }
       throw error;
     } finally {
       setSaving(false);
