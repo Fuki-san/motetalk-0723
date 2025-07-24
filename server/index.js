@@ -819,30 +819,30 @@ app.get('/api/user-profile', authenticateUser, requireAuth, async (req, res) => 
       
       const userData = userDoc.data();
       
-      // 購入履歴から最新のサブスクリプション状態を確認
-      const subscriptionDoc = await db.collection('purchases')
+      // 購入履歴から最新のサブスクリプション状態を確認（インデックスエラー回避のため簡素化）
+      const allPurchases = await db.collection('purchases')
         .where('userId', '==', userId)
-        .where('type', '==', 'subscription')
-        .orderBy('createdAt', 'desc')
-        .limit(1)
         .get();
       
       let currentPlan = userData.plan || 'free';
       let subscriptionStatus = userData.subscriptionStatus;
       
-      if (!subscriptionDoc.empty) {
-        const latestSubscription = subscriptionDoc.docs[0].data();
+      // メモリ上でフィルタリングとソート
+      const subscriptions = allPurchases.docs
+        .filter(doc => doc.data().type === 'subscription')
+        .sort((a, b) => b.data().createdAt?.toDate() - a.data().createdAt?.toDate());
+      
+      if (subscriptions.length > 0) {
+        const latestSubscription = subscriptions[0].data();
         if (latestSubscription.status === 'completed') {
           currentPlan = 'premium';
           subscriptionStatus = 'active';
         }
       }
       
-      // 購入済みテンプレートを取得
-      const templatePurchases = await db.collection('purchases')
-        .where('userId', '==', userId)
-        .where('type', '==', 'template')
-        .get();
+      // 購入済みテンプレートを取得（メモリ上でフィルタリング）
+      const templatePurchases = allPurchases.docs
+        .filter(doc => doc.data().type === 'template');
       
       const purchasedTemplates = templatePurchases.docs.map(doc => doc.data().templateId);
       
@@ -890,41 +890,38 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
     const userId = req.user.uid;
     
     try {
-      // サブスクリプション履歴を取得
-      const subscriptionsSnapshot = await db.collection('purchases')
+      // インデックスエラー回避のため、全購入履歴を取得してメモリ上でフィルタリング
+      const allPurchasesSnapshot = await db.collection('purchases')
         .where('userId', '==', userId)
-        .where('type', '==', 'subscription')
-        .orderBy('createdAt', 'desc')
         .get();
       
-      const subscriptions = subscriptionsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          amount: data.amount || 1980,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          status: data.status || 'completed'
-        };
-      });
+      const allPurchases = allPurchasesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       
-      // テンプレート購入履歴を取得
-      const templatePurchasesSnapshot = await db.collection('purchases')
-        .where('userId', '==', userId)
-        .where('type', '==', 'template')
-        .orderBy('createdAt', 'desc')
-        .get();
+      // メモリ上でフィルタリングとソート
+      const subscriptions = allPurchases
+        .filter(purchase => purchase.type === 'subscription')
+        .sort((a, b) => (b.createdAt?.toDate() || new Date()) - (a.createdAt?.toDate() || new Date()))
+        .map(purchase => ({
+          id: purchase.id,
+          amount: purchase.amount || 1980,
+          createdAt: purchase.createdAt?.toDate() || new Date(),
+          status: purchase.status || 'completed'
+        }));
       
-      const purchases = templatePurchasesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          templateId: data.templateId,
-          templateName: data.templateName || getTemplateDisplayName(data.templateId),
-          amount: data.amount || getTemplatePrice(data.templateId),
-          purchasedAt: data.purchasedAt?.toDate() || data.createdAt?.toDate() || new Date(),
-          status: data.status || 'completed'
-        };
-      });
+      const purchases = allPurchases
+        .filter(purchase => purchase.type === 'template')
+        .sort((a, b) => (b.createdAt?.toDate() || new Date()) - (a.createdAt?.toDate() || new Date()))
+        .map(purchase => ({
+          id: purchase.id,
+          templateId: purchase.templateId,
+          templateName: purchase.templateName || getTemplateDisplayName(purchase.templateId),
+          amount: purchase.amount || getTemplatePrice(purchase.templateId),
+          purchasedAt: purchase.purchasedAt?.toDate() || purchase.createdAt?.toDate() || new Date(),
+          status: purchase.status || 'completed'
+        }));
       
       const result = {
         subscriptions,
