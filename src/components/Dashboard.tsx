@@ -326,6 +326,18 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                 <History className="w-4 h-4" />
                 <span>会話履歴</span>
               </button>
+              <button
+                onClick={() => {
+                  setConversation([]);
+                  setCurrentReplies([]);
+                  setSelectedReplyIndex(null);
+                  setEditableReply('');
+                }}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>新しいチャット</span>
+              </button>
               {conversation.length > 0 && (
                 <button
                   onClick={() => setShowSaveModal(true)}

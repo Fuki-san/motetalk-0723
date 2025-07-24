@@ -614,4 +614,46 @@ git checkout <tag-name>
 - **解決策**: 
   - Templatesコンポーネントでページフォーカス時に購入状況を再取得
   - 詳細なログ出力でデバッグを改善
-  - 購入済みテンプレートの表示ロジックを改善 
+  - 購入済みテンプレートの表示ロジックを改善
+
+## 🔍 購入後の状態管理問題（2025-07-24 追加）
+
+### 5. Webhook処理後のデータベース更新問題
+- **問題**: 購入処理は成功するが、購入履歴が0件のまま
+- **原因**: Stripe Webhookが正しく処理されていない可能性
+- **調査結果**: 
+  - Checkout session作成は成功
+  - テンプレート購入状況確認APIは呼ばれている
+  - 購入履歴取得APIも呼ばれている
+  - しかし購入履歴が0件（`subscriptions: 0, purchases: 0`）
+  - **重要発見**: ログにWebhook受信の記録がない
+- **教訓**: Webhook処理の重要性とデバッグの必要性
+- **調査項目**:
+  1. Stripe Webhookの設定確認
+  2. Webhookエンドポイントの動作確認
+  3. データベースへの購入情報保存確認
+  4. 購入後の状態更新フローの確認
+- **解決策**: 
+  - Webhook処理の詳細ログ追加
+  - データベース保存処理の確認
+  - 購入後の状態更新フローの改善
+- **具体的な調査手順**:
+  1. Render環境でのSTRIPE_WEBHOOK_SECRET設定確認
+  2. Stripe DashboardでのWebhook設定確認
+  3. Webhookエンドポイントの動作テスト
+  4. 購入後のデータベース保存確認
+- **根本原因発見**: Stripe WebhookエンドポイントURLが不完全
+  - 現在: `https://motetalk-0723.onrender.com`
+  - 正しい: `https://motetalk-0723.onrender.com/webhook`
+- **解決策**: Stripe DashboardでWebhookエンドポイントURLを修正
+- **追加発見**: Webhook Secretの設定が必要
+  - ローカル開発: Stripe CLIで取得したSecretを使用
+  - 本番環境: Render環境変数で`STRIPE_WEBHOOK_SECRET`を設定
+- **学び**: 
+  - Webhookエンドポイントは完全なパス（`/webhook`含む）を指定する必要がある
+  - Webhook Secretは開発環境と本番環境で別々に設定する必要がある
+  - Stripe CLIを使ったローカルテストが重要
+- **改善点**:
+  - Webhook設定の自動化（CI/CDで環境変数管理）
+  - Webhook受信の監視とアラート設定
+  - 購入後の状態更新の確実性向上 

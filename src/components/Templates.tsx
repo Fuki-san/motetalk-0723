@@ -195,36 +195,58 @@ const Templates = () => {
           <div className="lg:w-1/4">
             <div className="bg-white rounded-2xl shadow-xl p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">カテゴリ</h3>
-              <nav className="space-y-2">
-                {displayCategories.map((category) => {
-                  const Icon = category.icon;
-                  const isPurchased = purchasedTemplates.includes(category.id);
-                  const isPremium = category.id === 'premium_pack' && isPremiumUser;
-                  
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                        selectedCategory === category.id
-                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-                          : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <div className="flex-1 text-left">
-                        <div className="font-medium">{category.name}</div>
-                        <div className="text-xs opacity-75">
-                          {isPurchased || isPremium ? '購入済み' : `¥${category.price.toLocaleString()}`}
+              {displayCategories.length > 0 ? (
+                <nav className="space-y-2">
+                  {displayCategories.map((category) => {
+                    const Icon = category.icon;
+                    const isPurchased = purchasedTemplates.includes(category.id);
+                    const isPremium = category.id === 'premium_pack' && isPremiumUser;
+                    
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                          selectedCategory === category.id
+                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <div className="flex-1 text-left">
+                          <div className="font-medium">{category.name}</div>
+                          <div className="text-xs opacity-75">
+                            {isPurchased || isPremium ? '購入済み' : `¥${category.price.toLocaleString()}`}
+                          </div>
                         </div>
-                      </div>
-                      {(isPurchased || isPremium) && (
-                        <Check className="w-4 h-4" />
-                      )}
+                        {(isPurchased || isPremium) && (
+                          <Check className="w-4 h-4" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-2">
+                    <ShoppingBag className="w-12 h-12 mx-auto" />
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    {viewMode === 'purchased' 
+                      ? '購入済みのテンプレートがありません'
+                      : '利用可能なテンプレートがありません'
+                    }
+                  </p>
+                  {viewMode === 'purchased' && (
+                    <button
+                      onClick={() => setViewMode('shop')}
+                      className="mt-4 text-purple-600 hover:text-purple-700 text-sm"
+                    >
+                      ショップを見る
                     </button>
-                  );
-                })}
-              </nav>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
