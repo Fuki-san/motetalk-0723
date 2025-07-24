@@ -779,6 +779,79 @@ app.get('/api/conversations', authenticateUser, requireAuth, async (req, res) =>
   }
 });
 
+// 購入履歴取得API
+app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    console.log('📋 購入履歴取得リクエスト for user:', req.user.uid);
+    
+    // データベースが利用できない場合はエラーを返す
+    if (!db) {
+      console.warn('⚠️ Database not available');
+      return res.status(503).json({ error: 'Database not available' });
+    }
+    
+    const userId = req.user.uid;
+    
+    try {
+      // サブスクリプション履歴を取得
+      const subscriptionsSnapshot = await db.collection('purchases')
+        .where('userId', '==', userId)
+        .where('type', '==', 'subscription')
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      const subscriptions = subscriptionsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          amount: data.amount || 1980,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          status: data.status || 'completed'
+        };
+      });
+      
+      // テンプレート購入履歴を取得
+      const templatePurchasesSnapshot = await db.collection('purchases')
+        .where('userId', '==', userId)
+        .where('type', '==', 'template')
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      const purchases = templatePurchasesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          templateId: data.templateId,
+          templateName: data.templateName || getTemplateDisplayName(data.templateId),
+          amount: data.amount || getTemplatePrice(data.templateId),
+          purchasedAt: data.purchasedAt?.toDate() || data.createdAt?.toDate() || new Date(),
+          status: data.status || 'completed'
+        };
+      });
+      
+      const result = {
+        subscriptions,
+        purchases
+      };
+      
+      console.log('✅ 購入履歴取得成功:', {
+        subscriptions: subscriptions.length,
+        purchases: purchases.length
+      });
+      
+      res.json(result);
+      
+    } catch (dbError) {
+      console.error('❌ Database operation failed:', dbError);
+      res.status(500).json({ error: 'Failed to get purchase history' });
+    }
+    
+  } catch (error) {
+    console.error('❌ 購入履歴取得エラー:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // 特定の会話履歴取得API（有料ユーザーのみ）
 app.get('/api/conversations/:id', authenticateUser, requireAuth, async (req, res) => {
   try {

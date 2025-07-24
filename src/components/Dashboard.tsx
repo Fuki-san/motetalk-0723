@@ -105,13 +105,17 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
 
   const handleGenerateReplies = async () => {
     if (!inputMessage.trim()) return;
-    if (usageLimit ? !usageLimit.canUse : false) {
+    
+    // プレミアムユーザーは使用回数制限をチェックしない
+    if (usageLimit && usageLimit.plan === 'free' && !usageLimit.canUse) {
       alert('今月の使用回数上限に達しました。プレミアムプランにアップグレードしてください。');
       return;
     }
+    
     setIsLoading(true);
     setSelectedReplyIndex(null);
     try {
+      // 無料ユーザーのみ使用回数を増加
       if (usageLimit && usageLimit.plan === 'free') {
         try {
           // 使用回数を増加
@@ -249,6 +253,24 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     
     try {
       setSaveLoading(true);
+      
+      // プレミアムユーザーの場合、会話履歴の数をチェック
+      if (usageLimit && usageLimit.isPremium) {
+        const currentHistory = await loadConversationHistory();
+        if (currentHistory && currentHistory.length >= 3) {
+          if (confirm('会話履歴が最大数（3つ）に達しています。古い会話履歴を削除して新しい会話を保存しますか？')) {
+            // 最も古い会話履歴を削除
+            const oldestConversation = currentHistory[currentHistory.length - 1];
+            if (oldestConversation) {
+              await deleteConversation(oldestConversation.id);
+            }
+          } else {
+            setSaveLoading(false);
+            return;
+          }
+        }
+      }
+      
       const success = await saveConversation(saveTitle, conversation);
       if (success) {
         setShowSaveModal(false);
