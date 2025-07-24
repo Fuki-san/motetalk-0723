@@ -167,8 +167,8 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
         // Firebase認証からもサインアウト
         await signOut();
         
-        // トップページにリダイレクト
-        window.location.href = '/';
+        // ダッシュボードに戻る（SPAルーティングを使用）
+        window.dispatchEvent(new CustomEvent('navigate', { detail: 'dashboard' }));
       } else {
         throw new Error(result.message || 'アカウント削除に失敗しました');
       }
