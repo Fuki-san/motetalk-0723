@@ -184,7 +184,7 @@ app.use((req, res, next) => {
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    // 認証状態を保持するため、Clear-Site-Dataを削除
     return express.static(staticPath)(req, res, next);
   }
   next();
@@ -200,7 +200,7 @@ app.use((req, res, next) => {
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    // 認証状態を保持するため、Clear-Site-Dataを削除
     return express.static(staticPath)(req, res, next);
   }
   next();
@@ -216,7 +216,7 @@ app.use((req, res, next) => {
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    // 認証状態を保持するため、Clear-Site-Dataを削除
     return express.static(staticPath)(req, res, next);
   }
   next();
@@ -1890,17 +1890,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// ルートパスの処理
+  // ルートパスの処理
 app.get('/', (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
-    // 強力なキャッシュ制御ヘッダーを設定
+    // 強力なキャッシュ制御ヘッダーを設定（認証状態を保持するためClear-Site-Dataは削除）
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
     
     // HTMLファイルを読み込んで動的に更新
     let htmlContent = fs.readFileSync(indexPath, 'utf8');
@@ -1958,13 +1957,12 @@ app.use((req, res, next) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
     console.log(`📄 SPAルーティング: ${req.path} -> index.html`);
-    // 強力なキャッシュ制御ヘッダーを設定
+    // 強力なキャッシュ制御ヘッダーを設定（認証状態を保持するためClear-Site-Dataは削除）
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
     
     // HTMLファイルを読み込んで動的に更新
     let htmlContent = fs.readFileSync(indexPath, 'utf8');

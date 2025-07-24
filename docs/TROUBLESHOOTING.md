@@ -144,10 +144,99 @@ app.use((req, res, next) => {
 - 開発環境ではキャッシュを無効化
 - **キャッシュバスティング付きURLを使用**
 - **静的ファイル配信の順序に注意**
+- **Clear-Site-Dataヘッダーの使用に注意**（認証状態をリセットする可能性）
 
-### 2. 静的ファイル配信エラー
+### 2. Gemini API 503エラー
 
-### 2. path-to-regexpエラー
+#### 症状
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent 503 (Service Unavailable)
+Gemini API Error: ow: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent: [503 ] The model is overloaded. Please try again later.
+```
+
+#### 原因
+- Gemini APIの一時的な過負荷状態
+- モデルが過負荷でリクエストを処理できない
+
+#### 解決策
+1. **リトライ機能の実装**
+   ```javascript
+   const retryApiCall = async (apiCall, maxRetries = 3, delay = 1000) => {
+     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+       try {
+         return await apiCall();
+       } catch (error) {
+         if (error.message.includes('503') || error.message.includes('overloaded')) {
+           if (attempt < maxRetries) {
+             const waitTime = delay * Math.pow(2, attempt - 1);
+             await new Promise(resolve => setTimeout(resolve, waitTime));
+             continue;
+           }
+         }
+         throw error;
+       }
+     }
+   };
+   ```
+
+2. **フォールバック機能の強化**
+   - API失敗時に適切なフォールバック返信を提供
+   - ユーザーに分かりやすいエラーメッセージを表示
+
+3. **指数バックオフ**
+   - リトライ間隔を指数関数的に増加
+   - サーバー負荷を軽減
+
+#### 予防策
+- API使用量の監視
+- 適切なレート制限の設定
+- フォールバック機能の常時準備
+- **リトライ機能の実装**（503エラー対策）
+- **指数バックオフの使用**（サーバー負荷軽減）
+
+### 3. Stripe決済後のリダイレクト問題
+
+#### 症状
+- 決済完了後にログインしていないページに戻る
+- 認証状態がリセットされる
+- 適切なページに遷移しない
+
+#### 原因
+- キャッシュ設定による認証状態のリセット
+- 決済完了後の適切なリダイレクト処理が不十分
+
+#### 解決策
+1. **キャッシュ設定の調整**
+   ```javascript
+   // Clear-Site-Dataヘッダーを削除して認証状態を保持
+   // res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+   ```
+
+2. **適切なリダイレクト処理**
+   ```javascript
+   // 購入タイプに応じた自動リダイレクト
+   if (purchaseInfo.type === 'subscription') {
+     window.location.href = '/dashboard';
+   } else {
+     window.location.href = '/templates?view=purchased';
+   }
+   ```
+
+3. **Webhook処理の完了待機**
+   - 決済完了後、Webhook処理の完了を待機
+   - 適切なタイミングでリダイレクト
+
+#### 予防策
+- 決済フローのテスト
+- 認証状態の確認
+- 適切なエラーハンドリング
+- **Clear-Site-Dataヘッダーの削除**（認証状態保持）
+- **Webhook処理完了の待機**（適切なタイミングでのリダイレクト）
+- **購入タイプに応じた自動リダイレクト**（ユーザー体験向上）
+
+### 4. 静的ファイル配信エラー
+
+### 4. path-to-regexpエラー
 
 #### 症状
 ```
@@ -363,6 +452,28 @@ cat .env
 
 # 環境変数の確認
 echo $VITE_GEMINI_API_KEY
+```
+
+### 4. キャッシュ設定の確認
+
+#### HTTPヘッダーの確認
+```bash
+# HTMLファイルのヘッダー確認
+curl -I http://localhost:3001/
+
+# JSファイルのヘッダー確認
+curl -I http://localhost:3001/index-*.js
+
+# Clear-Site-Dataヘッダーの有無を確認
+curl -I http://localhost:3001/ | grep -i "clear-site-data"
+```
+
+#### 認証状態の確認
+```bash
+# ブラウザの開発者ツールで確認
+# Application > Storage > Local Storage
+# Application > Storage > Session Storage
+# Application > Cookies
 ```
 
 #### Render環境

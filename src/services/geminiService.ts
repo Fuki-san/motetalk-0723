@@ -94,7 +94,8 @@ ${conversationContext ? `【これまでの会話履歴】\n${conversationContex
 
 返信案3: （返信内容）`;
 
-    const result = await model.generateContent(prompt);
+    // リトライ機能付きでAPI呼び出し
+    const result = await retryApiCall(() => model.generateContent(prompt), 3);
     const response = await result.response;
     const text = response.text();
 
@@ -113,6 +114,11 @@ ${conversationContext ? `【これまでの会話履歴】\n${conversationContex
   } catch (error) {
     console.error('Gemini API Error:', error);
     
+    // 503エラーの場合は特別なメッセージを表示
+    if (error.message.includes('503') || error.message.includes('overloaded')) {
+      console.warn('⚠️ Gemini APIが過負荷状態です。フォールバック返信を使用します。');
+    }
+    
     // フォールバック返信（開発・テスト用）
     const fallbackReplies = generateFallbackReplies(request.currentMessage);
     
@@ -122,6 +128,43 @@ ${conversationContext ? `【これまでの会話履歴】\n${conversationContex
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
+};
+
+// リトライ機能付きAPI呼び出し
+const retryApiCall = async <T>(
+  apiCall: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // 503エラーまたは過負荷エラーの場合のみリトライ
+      if (error instanceof Error && 
+          (error.message.includes('503') || error.message.includes('overloaded'))) {
+        
+        console.warn(`⚠️ Gemini API過負荷 (試行 ${attempt}/${maxRetries})`);
+        
+        if (attempt < maxRetries) {
+          // 指数バックオフで待機
+          const waitTime = delay * Math.pow(2, attempt - 1);
+          console.log(`⏳ ${waitTime}ms待機後にリトライ...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+      }
+      
+      // その他のエラーは即座に投げる
+      throw error;
+    }
+  }
+  
+  throw lastError!;
 };
 
 const parseGeminiResponse = (text: string): string[] => {
