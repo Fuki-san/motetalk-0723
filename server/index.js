@@ -171,35 +171,56 @@ app.use((req, res, next) => {
   next();
 });
 
-// 静的ファイルの配信設定（最初に配置）
+// 静的ファイルの配信設定（JS、CSS、SVGファイルのみ）
 const staticPath = path.join(__dirname, '../dist');
-app.use(express.static(staticPath, {
-  maxAge: '0', // キャッシュを無効化してデバッグ
-  etag: false,
-  lastModified: false,
-  setHeaders: (res, path) => {
-    console.log(`📁 Serving static file: ${path}`);
-    // JavaScriptファイルのMIMEタイプを正しく設定
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    }
-    // CSSファイルのMIMEタイプを設定
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    }
-    // SVGファイルのMIMEタイプを設定
-    if (path.endsWith('.svg')) {
-      res.setHeader('Content-Type', 'image/svg+xml');
-    }
-    // キャッシュ制御ヘッダーを設定
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+// JSファイルの配信
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.js/)) {
+    console.log(`📁 Serving JS file: ${req.path}`);
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    // 追加のヘッダーでキャッシュを確実に無効化
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    return express.static(staticPath)(req, res, next);
   }
-}));
+  next();
+});
+
+// CSSファイルの配信
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.css/)) {
+    console.log(`📁 Serving CSS file: ${req.path}`);
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+
+// SVGファイルの配信
+app.use((req, res, next) => {
+  if (req.path.match(/\.svg$/)) {
+    console.log(`📁 Serving SVG file: ${req.path}`);
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
 
 // デバッグ用ログ
 console.log('📁 静的ファイルパス:', staticPath);
@@ -1873,10 +1894,13 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
-    // キャッシュ制御ヘッダーを設定
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // 強力なキャッシュ制御ヘッダーを設定
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
     
     // HTMLファイルを読み込んで動的に更新
     let htmlContent = fs.readFileSync(indexPath, 'utf8');
@@ -1887,17 +1911,20 @@ app.get('/', (req, res) => {
     const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
     
     if (jsFile && cssFile) {
-      // HTML内のファイル名を現在のビルドファイルに置換
+      // キャッシュバスティング用のタイムスタンプを追加
+      const timestamp = Date.now();
+      
+      // HTML内のファイル名を現在のビルドファイルに置換（キャッシュバスティング付き）
       htmlContent = htmlContent.replace(
         /src="\/index-[^"]+\.js"/g,
-        `src="/${jsFile}"`
+        `src="/${jsFile}?v=${timestamp}"`
       );
       htmlContent = htmlContent.replace(
         /href="\/index-[^"]+\.css"/g,
-        `href="/${cssFile}"`
+        `href="/${cssFile}?v=${timestamp}"`
       );
       
-      console.log(`🔄 HTMLファイルを動的更新: ${jsFile}, ${cssFile}`);
+      console.log(`🔄 HTMLファイルを動的更新（キャッシュバスティング付き）: ${jsFile}?v=${timestamp}, ${cssFile}?v=${timestamp}`);
     }
     
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -1931,10 +1958,13 @@ app.use((req, res, next) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
     console.log(`📄 SPAルーティング: ${req.path} -> index.html`);
-    // キャッシュ制御ヘッダーを設定
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // 強力なキャッシュ制御ヘッダーを設定
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
     
     // HTMLファイルを読み込んで動的に更新
     let htmlContent = fs.readFileSync(indexPath, 'utf8');
@@ -1945,17 +1975,20 @@ app.use((req, res, next) => {
     const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
     
     if (jsFile && cssFile) {
-      // HTML内のファイル名を現在のビルドファイルに置換
+      // キャッシュバスティング用のタイムスタンプを追加
+      const timestamp = Date.now();
+      
+      // HTML内のファイル名を現在のビルドファイルに置換（キャッシュバスティング付き）
       htmlContent = htmlContent.replace(
         /src="\/index-[^"]+\.js"/g,
-        `src="/${jsFile}"`
+        `src="/${jsFile}?v=${timestamp}"`
       );
       htmlContent = htmlContent.replace(
         /href="\/index-[^"]+\.css"/g,
-        `href="/${cssFile}"`
+        `href="/${cssFile}?v=${timestamp}"`
       );
       
-      console.log(`🔄 SPAルーティングでHTMLファイルを動的更新: ${jsFile}, ${cssFile}`);
+      console.log(`🔄 SPAルーティングでHTMLファイルを動的更新（キャッシュバスティング付き）: ${jsFile}?v=${timestamp}, ${cssFile}?v=${timestamp}`);
     }
     
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

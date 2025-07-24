@@ -1,5 +1,81 @@
 # 開発メモ
 
+## 🚀 最新の学び（2025-07-24）
+
+### SPAキャッシュ問題の根本的解決
+
+#### 問題の背景
+- ブラウザが古いビルドファイル名をキャッシュしている
+- 静的ファイル配信の順序が不適切
+- path-to-regexpエラーによるサーバー起動失敗
+
+#### 解決策の実装
+
+##### 1. 動的HTML生成
+```javascript
+// 現在のビルドファイルを自動検出
+const distFiles = fs.readdirSync(path.join(__dirname, '../dist'));
+const jsFile = distFiles.find(file => file.endsWith('.js') && file.startsWith('index-'));
+const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
+
+// キャッシュバスティング付きでHTMLを更新
+const timestamp = Date.now();
+htmlContent = htmlContent.replace(
+  /src="\/index-[^"]+\.js"/g,
+  `src="/${jsFile}?v=${timestamp}"`
+);
+```
+
+##### 2. 静的ファイル配信の最適化
+```javascript
+// index.htmlを除外して動的生成を優先
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.js/)) {
+    // JSファイルの配信
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+```
+
+##### 3. 強力なキャッシュ制御
+```javascript
+res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+```
+
+#### 重要な学び
+
+1. **問題の真の原因を特定する重要性**
+   - 表面的なエラーメッセージだけでなく、根本原因を追求
+   - ブラウザキャッシュが主な原因だった
+
+2. **段階的なデバッグの効果**
+   - ローカルテストで問題を早期発見
+   - 小さな修正を積み重ねて解決
+
+3. **静的ファイル配信の順序の重要性**
+   - `express.static`の配置順序が重要
+   - 動的生成と静的配信の競合を回避
+
+4. **キャッシュバスティングの効果**
+   - タイムスタンプ付きURLで確実にキャッシュを無効化
+   - ブラウザの厳格なキャッシュ制御に対応
+
+#### 今後の改善点
+
+1. **本番環境でのキャッシュ戦略**
+   - 適切なキャッシュ期間の設定
+   - CDNとの連携
+
+2. **ビルドプロセスの最適化**
+   - ファイル名の一貫性確保
+   - 不要なファイルの削除
+
+3. **監視とログの強化**
+   - エラー検知の自動化
+   - パフォーマンス監視
+
 MoteTalkプロジェクトの開発過程での気づき、実験結果、トラブルシューティングの記録です。
 
 ## 📝 開発ログ

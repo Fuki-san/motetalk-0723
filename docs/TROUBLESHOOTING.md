@@ -66,11 +66,84 @@ app.use(express.static(staticPath, {
 }));
 ```
 
+#### 根本的な解決策（重要）
+
+##### 1. キャッシュバスティング付きHTML生成
+```javascript
+// キャッシュバスティング用のタイムスタンプを追加
+const timestamp = Date.now();
+
+// HTML内のファイル名を現在のビルドファイルに置換（キャッシュバスティング付き）
+htmlContent = htmlContent.replace(
+  /src="\/index-[^"]+\.js"/g,
+  `src="/${jsFile}?v=${timestamp}"`
+);
+htmlContent = htmlContent.replace(
+  /href="\/index-[^"]+\.css"/g,
+  `href="/${cssFile}?v=${timestamp}"`
+);
+```
+
+##### 2. 強力なキャッシュ制御ヘッダー
+```javascript
+res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+res.setHeader('Pragma', 'no-cache');
+res.setHeader('Expires', '0');
+res.setHeader('Surrogate-Control', 'no-store');
+res.setHeader('X-Content-Type-Options', 'nosniff');
+res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
+```
+
+##### 3. 静的ファイル配信の最適化
+```javascript
+// JSファイルの配信
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.js/)) {
+    console.log(`📁 Serving JS file: ${req.path}`);
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    // キャッシュ制御ヘッダーを設定
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+
+// CSSファイルの配信
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.css/)) {
+    console.log(`📁 Serving CSS file: ${req.path}`);
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    // キャッシュ制御ヘッダーを設定
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+```
+
+#### 重要な学び
+
+##### 1. 問題の真の原因
+- **ブラウザキャッシュ**: 古いHTMLファイルがキャッシュされている
+- **静的ファイル配信の順序**: `express.static`が動的HTML生成より先に実行される
+- **path-to-regexpエラー**: ワイルドカードパス指定でエラーが発生
+
+##### 2. 解決のポイント
+- **動的HTML生成**: サーバーが現在のビルドファイルを自動検出
+- **キャッシュバスティング**: タイムスタンプ付きURLでキャッシュを無効化
+- **静的ファイル配信の分離**: `index.html`を除外して動的生成を優先
+- **適切なMIME type設定**: 各ファイルタイプに応じたContent-Type
+
+##### 3. デバッグの重要性
+- **ローカルテスト**: プッシュ前に必ずローカルで動作確認
+- **ログの活用**: 詳細なログで問題を特定
+- **段階的な修正**: 一度に大きな変更を避け、小さな修正を積み重ね
+
 #### 予防策
 - 本番環境では適切なキャッシュ戦略を実装
 - ビルド時にファイル名の一貫性を確保
 - デプロイ後のハードリフレッシュを推奨
 - 開発環境ではキャッシュを無効化
+- **キャッシュバスティング付きURLを使用**
+- **静的ファイル配信の順序に注意**
 
 ### 2. 静的ファイル配信エラー
 
