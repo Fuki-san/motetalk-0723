@@ -1849,9 +1849,27 @@ async function savePurchaseToDatabase(session) {
       return;
     }
 
+    const customerEmail = session.customer_details?.email;
+    if (!customerEmail) {
+      console.error('❌ カスタマー情報が見つかりません');
+      return;
+    }
+
+    // ユーザーを特定
+    const usersQuery = await db.collection('users').where('email', '==', customerEmail).get();
+    let userId = null;
+    
+    if (!usersQuery.empty) {
+      userId = usersQuery.docs[0].id;
+    } else {
+      console.error('❌ ユーザーが見つかりません:', customerEmail);
+      return;
+    }
+
     const purchaseData = {
+      userId: userId,
       stripeSessionId: session.id,
-      customerEmail: session.customer_details?.email,
+      customerEmail: customerEmail,
       amount: session.amount_total,
       currency: session.currency,
       status: 'completed',
@@ -1860,7 +1878,7 @@ async function savePurchaseToDatabase(session) {
     };
 
     await db.collection('purchases').add(purchaseData);
-    console.log('✅ 購入データをFirestoreに保存:', session.id);
+    console.log('✅ 購入データをFirestoreに保存:', session.id, 'for user:', userId);
   } catch (error) {
     console.error('❌ 購入データ保存エラー:', error);
   }

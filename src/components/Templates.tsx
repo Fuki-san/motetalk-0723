@@ -307,8 +307,8 @@ const Templates = () => {
                       ))}
                     </div>
                   </div>
-                ) : (
-                  // 未購入テンプレート: プレビュー表示（例文1つのみ）
+                ) : viewMode === 'shop' ? (
+                  // ショップモード: 未購入テンプレートのプレビュー表示
                   <div className="grid grid-cols-1 gap-6">
                     {selectedCategoryData.templates.slice(0, 1).map((template) => (
                       <div key={template.id} className="bg-white rounded-2xl shadow-xl p-6">
@@ -332,6 +332,21 @@ const Templates = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  // 購入済みモードで未購入テンプレートが選択された場合
+                  <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+                    <div className="text-gray-400 mb-4">
+                      <Lock className="w-16 h-16 mx-auto" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">このテンプレートは購入していません</h3>
+                    <p className="text-gray-600 mb-4">ショップで購入してからご利用ください</p>
+                    <button
+                      onClick={() => setViewMode('shop')}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+                    >
+                      ショップを見る
+                    </button>
                   </div>
                 )}
               </div>
