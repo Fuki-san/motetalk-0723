@@ -174,10 +174,11 @@ app.use((req, res, next) => {
 // 静的ファイルの配信設定（最初に配置）
 const staticPath = path.join(__dirname, '../dist');
 app.use(express.static(staticPath, {
-  maxAge: '1h',
-  etag: true,
-  lastModified: true,
+  maxAge: '0', // キャッシュを無効化してデバッグ
+  etag: false,
+  lastModified: false,
   setHeaders: (res, path) => {
+    console.log(`📁 Serving static file: ${path}`);
     // JavaScriptファイルのMIMEタイプを正しく設定
     if (path.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
@@ -190,6 +191,10 @@ app.use(express.static(staticPath, {
     if (path.endsWith('.svg')) {
       res.setHeader('Content-Type', 'image/svg+xml');
     }
+    // キャッシュ制御ヘッダーを設定
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
 }));
 
@@ -269,11 +274,15 @@ app.use((req, res, next) => {
   const hasStaticExtension = staticExtensions.some(ext => req.path.endsWith(ext));
   
   if (hasStaticExtension) {
-    // 静的ファイルが見つからない場合は404エラーを返す
+    // 静的ファイルが見つからない場合の詳細ログ
     console.log(`❌ Static file not found: ${req.path}`);
+    console.log(`📁 Available files in dist:`, fs.readdirSync(path.join(__dirname, '../dist')));
+    
+    // より詳細なエラー情報を返す
     return res.status(404).json({ 
       error: 'Static file not found',
       path: req.path,
+      availableFiles: fs.readdirSync(path.join(__dirname, '../dist')),
       timestamp: new Date().toISOString()
     });
   }
@@ -1861,6 +1870,10 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
+    // キャッシュ制御ヘッダーを設定
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(indexPath);
   } else {
     res.status(404).send('Build files not found. Please run npm run build first.');
@@ -1891,6 +1904,10 @@ app.use((req, res, next) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
     console.log(`📄 SPAルーティング: ${req.path} -> index.html`);
+    // キャッシュ制御ヘッダーを設定
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(indexPath);
   } else {
     console.log(`❌ index.html not found: ${indexPath}`);
