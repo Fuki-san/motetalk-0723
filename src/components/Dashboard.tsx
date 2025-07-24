@@ -4,6 +4,7 @@ import { generateReplies, ConversationTurn as ApiConversationTurn } from '../ser
 import { checkUsageLimit, incrementUsage, getUsageDisplayText, getUsageWarningMessage, UsageLimit } from '../services/usageService';
 import { saveConversation, getConversationList, getConversation, deleteConversation, ConversationHistory, ConversationTurn as HistoryConversationTurn } from '../services/conversationService';
 import { useAuth } from '../hooks/useAuth';
+import { useUserData } from '../hooks/useUserData';
 
 interface DashboardProps {
   isAuthenticated: boolean;
@@ -19,6 +20,7 @@ interface ConversationTurn {
 
 const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
   const { user: authUser } = useAuth();
+  const { userProfile, refreshUserData } = useUserData();
   const [inputMessage, setInputMessage] = useState('');
   const [conversation, setConversation] = useState<ConversationTurn[]>([]);
   const [currentReplies, setCurrentReplies] = useState<string[]>([]);
@@ -68,17 +70,18 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     loadUsageLimit();
   }, [isAuthenticated, authUser]);
 
-  // ページがフォーカスされた時に使用回数を再取得
+  // ページがフォーカスされた時に使用回数とユーザー情報を再取得
   useEffect(() => {
     const handleFocus = () => {
       if (isAuthenticated && authUser) {
         loadUsageLimit();
+        refreshUserData(); // 購入後の状態更新のため
       }
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [isAuthenticated, authUser]);
+  }, [isAuthenticated, authUser, refreshUserData]);
 
   const loadUsageLimit = async () => {
     if (isAuthenticated && authUser) {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Check, Crown, MessageCircle, ArrowRight, Loader } from 'lucide-react';
 import { checkPurchaseStatus } from '../services/stripeService';
 import { useAuth } from '../hooks/useAuth';
+import { getAuth } from 'firebase/auth';
 
 const SuccessPage = () => {
   const [purchaseInfo, setPurchaseInfo] = useState<any>(null);
@@ -37,6 +38,17 @@ const SuccessPage = () => {
       const autoRedirect = async () => {
         // 少し待機してWebhook処理の完了を待つ
         await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // 購入後にユーザー情報を再取得
+        try {
+          const currentUser = getAuth().currentUser;
+          if (currentUser) {
+            const token = await currentUser.getIdToken(true); // 強制リフレッシュ
+            console.log('🔄 購入後のユーザートークンをリフレッシュ');
+          }
+        } catch (error) {
+          console.warn('⚠️ トークンリフレッシュエラー:', error);
+        }
         
         setRedirecting(true);
         
