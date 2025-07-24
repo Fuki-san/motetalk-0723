@@ -20,21 +20,11 @@ export default defineConfig({
         entryFileNames: '[name]-[hash].js',
         chunkFileNames: '[name]-[hash].js',
         assetFileNames: '[name]-[hash].[ext]',
-        // より安定したファイル名生成
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          firebase: ['firebase'],
-          stripe: ['@stripe/stripe-js'],
-        },
       },
     },
-    // ビルド設定の改善
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    // より安定したビルド
-    minify: 'terser',
-    target: 'es2020',
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
