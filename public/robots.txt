@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://motetalk.com/sitemap.xml
+
+# 重要なページ
+Allow: /templates
+Allow: /pricing
+Allow: /dashboard
+
+# プライベートページ
+Disallow: /api/
+Disallow: /admin/
+Disallow: /success
+Disallow: /mypage 

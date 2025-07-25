@@ -23,7 +23,7 @@ export const templateCategories: TemplateCategory[] = [
     id: 'first_message_pack',
     name: '初回メッセージ',
     description: 'Tinder・タップル用の返信率が高い初回メッセージ30種類',
-    price: 980,
+    price: 2500,
     priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14',
     icon: MessageCircle,
     templates: [
@@ -184,7 +184,7 @@ export const templateCategories: TemplateCategory[] = [
     id: 'line_transition_pack',
     name: 'LINE移行',
     description: 'アプリからLINEへの自然な移行メッセージ30種類',
-    price: 980,
+    price: 2500,
     priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 既存のprice IDを使用
     icon: Heart,
     templates: [
@@ -345,7 +345,7 @@ export const templateCategories: TemplateCategory[] = [
     id: 'date_invitation_pack',
     name: 'デート誘い',
     description: '自然で断られにくいデート誘いメッセージ30種類',
-    price: 980,
+    price: 2500,
     priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
     icon: Coffee,
     templates: [
@@ -506,7 +506,7 @@ export const templateCategories: TemplateCategory[] = [
     id: 'conversation_topics_pack',
     name: '会話ネタ',
     description: '会話が続く話題と質問30種類',
-    price: 980,
+    price: 2500,
     priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
     icon: Star,
     templates: [

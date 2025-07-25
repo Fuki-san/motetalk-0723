@@ -1,146 +1,217 @@
-# 🔧 リファクタリングガイド
+# リファクタリングガイドライン
 
-## 📋 完了したリファクタリング
+## 🚨 重要な教訓・よくあるエラー
 
-### 1. 不要ファイルの削除
-- `.DS_Store` ファイルの削除
-- ログファイルの削除
-- 重複したテンプレートデータの削除
+### 1. 重複保存の根本原因と解決策
 
-### 2. 共通ユーティリティの抽出
-
-#### 認証関連 (`src/services/authUtils.ts`)
-```typescript
-// 共通の認証トークン取得
-export const getAuthToken = async (): Promise<string>
-
-// 共通のAPI呼び出しヘルパー
-export const apiCall = async <T>(url: string, options?: RequestInit): Promise<T>
+#### 問題の特定
+```javascript
+// ❌ 問題のある実装
+// Webhookで同じデータが2回保存される
+case 'checkout.session.completed':
+  await savePurchaseToDatabase(session);      // 1回目の保存
+  await handleTemplatePurchase(session);      // 2回目の保存（重複！）
 ```
 
-#### ログ出力 (`src/utils/logger.ts`)
-```typescript
-// 環境に応じたログ出力制御
-export const logger = {
-  log, error, warn, info
+#### 解決策
+```javascript
+// ✅ 修正後の実装
+case 'checkout.session.completed':
+  await savePurchaseToDatabase(session);      // 購入データ保存
+  await updateUserPurchasedTemplates(session); // ユーザー情報更新のみ
+```
+
+**教訓**: 
+- 同じデータを複数の関数で保存しない
+- 保存と更新の責任を分離する
+- Webhook処理は慎重に設計する
+
+### 2. ESモジュールの統一
+
+#### よくあるエラー
+```javascript
+// ❌ エラー: The requested module does not provide an export named 'functionName'
+// 原因: module.exports と export の混在
+
+// 修正前
+module.exports = { function1, function2 };  // CommonJS
+
+// 修正後
+export { function1, function2 };  // ESモジュール
+```
+
+**教訓**: 
+- プロジェクト全体でESモジュール（`import`/`export`）に統一
+- 新規ファイル作成時は必ずESモジュールを使用
+- 既存ファイルの修正時も統一性を保つ
+
+### 3. データ表示の統一
+
+#### 問題の特定
+```javascript
+// ❌ 異なる関数で異なる名前を設定
+// savePurchaseToDatabase で
+templateName: '初回メッセージパック'
+
+// handleTemplatePurchase で  
+templateName: '初回メッセージ'
+```
+
+#### 解決策
+```javascript
+// ✅ 共通ユーティリティを使用
+templateName: getTemplateDisplayName(templateId)  // 統一された名前
+```
+
+**教訓**: 
+- 表示用データは共通ユーティリティで管理
+- ハードコードされた文字列は避ける
+- 一貫性のある命名規則を適用
+
+### 4. 重複除去ロジックの実装
+
+#### 問題の特定
+```javascript
+// ❌ 重複チェックなし
+const purchases = allPurchases.filter(p => p.type === 'template');
+```
+
+#### 解決策
+```javascript
+// ✅ 重複除去ロジック実装
+const uniquePurchases = removeDuplicatePurchases(
+  allPurchases.filter(p => p.type === 'template')
+);
+
+// 重複除去関数
+function removeDuplicatePurchases(purchases) {
+  const seen = new Set();
+  return purchases.filter(purchase => {
+    const key = purchase.stripeSessionId || purchase.id;
+    if (seen.has(key)) {
+      console.log('🔍 重複を除去:', key);
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 ```
 
-### 3. データの分離
+**教訓**: 
+- データベースから取得したデータは必ず重複除去を行う
+- `stripeSessionId`ベースの重複除去が効果的
+- 重複除去の過程をログ出力して確認
 
-#### テンプレートデータ (`src/data/templateData.ts`)
-- 重複したテンプレートデータを分離
-- 型定義の統一
-- 再利用可能な構造
+### 5. 日付フォーマットの統一
 
-#### 共通型定義 (`src/types/index.ts`)
-- ユーザー関連の型
-- 会話関連の型
-- 使用量関連の型
-- 設定関連の型
-- API レスポンス関連の型
+#### 問題の特定
+```javascript
+// ❌ 異なるフォーマットが混在
+purchasedAt: '2025/7/26'  // 時間なし
+purchasedAt: '2025-07-26T15:30:00.000Z'  // ISO形式
+```
 
-### 4. 共通コンポーネントの作成
+#### 解決策
+```javascript
+// ✅ 統一されたフォーマット
+purchasedAt: formatDateToJapanese(date)  // '2025/07/26 15:30'
 
-#### LoadingSpinner (`src/components/common/LoadingSpinner.tsx`)
-```typescript
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  text?: string;
-  className?: string;
+// 共通ユーティリティ
+function formatDateToJapanese(date) {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const hours = String(dateObj.getHours()).padStart(2, '0');
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  
+  return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
 ```
 
-#### Button (`src/components/common/Button.tsx`)
-```typescript
-interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
-  icon?: LucideIcon;
-  // ...
-}
-```
+**教訓**: 
+- 日付フォーマットは共通ユーティリティで統一
+- ユーザーにとって分かりやすい形式を選択
+- 時間情報も含めて表示する
 
-### 5. サービス層のリファクタリング
+## 🔧 リファクタリング手順
 
-#### EmailNotificationService
-- 共通の `apiCall` を使用
-- 重複した認証ロジックを削除
-- エラーハンドリングの統一
+### 1. 問題の特定
+1. **サーバーログの詳細確認**
+   ```javascript
+   console.log('🔍 データベースから取得した全購入データ:', allPurchases);
+   console.log('🔍 重複除去後の詳細:', uniquePurchases);
+   ```
 
-#### StripeService
-- 共通の `getAuthToken` を使用
-- デバッグログの整理
+2. **重複データの調査**
+   ```bash
+   # 重複除去スクリプト実行
+   node scripts/cleanup-duplicate-purchases.js
+   ```
 
-## 🚫 今後避けるべきこと
+3. **根本原因の特定**
+   - 同じ処理が複数の関数で実行されていないか
+   - データの保存と更新が適切に分離されているか
+   - 共通ユーティリティが正しく使用されているか
 
-### 1. 重複コードの作成
-- 認証トークン取得は `authUtils.ts` を使用
-- API呼び出しは `apiCall` を使用
-- ログ出力は `logger` を使用
+### 2. 修正の実装
+1. **重複保存の修正**
+   - 保存処理を1つの関数に統一
+   - 更新処理を分離
 
-### 2. 大きなファイルの作成
-- コンポーネントは500行以下を目標
-- データとロジックは分離
-- 共通部分は抽出
+2. **ESモジュールの統一**
+   - 全てのファイルで`export`を使用
+   - `module.exports`を削除
 
-### 3. 型定義の重複
-- 新しい型は `src/types/index.ts` に追加
-- 既存の型を再利用
-- インターフェースの統一
+3. **表示データの統一**
+   - 共通ユーティリティを使用
+   - ハードコードされた文字列を削除
 
-## ✅ 今後の開発ガイドライン
+### 3. テストと確認
+1. **サーバー再起動**
+   ```bash
+   pkill -f "node server/index.js"
+   node server/index.js
+   ```
 
-### 1. ファイル構造
-```
-src/
-├── components/
-│   ├── common/          # 共通コンポーネント
-│   └── [feature]/       # 機能別コンポーネント
-├── services/            # API呼び出し
-├── hooks/              # カスタムフック
-├── utils/              # ユーティリティ
-├── types/              # 型定義
-├── data/               # 静的データ
-└── config/             # 設定
-```
+2. **動作確認**
+   - ブラウザで購入履歴を確認
+   - 新規購入で重複が発生しないかテスト
+   - 日付フォーマットが統一されているか確認
 
-### 2. 命名規則
-- コンポーネント: PascalCase (`LoadingSpinner`)
-- ファイル: kebab-case (`loading-spinner.tsx`)
-- 関数: camelCase (`getAuthToken`)
-- 定数: UPPER_SNAKE_CASE (`API_BASE_URL`)
+## 📋 リファクタリングチェックリスト
 
-### 3. コード品質
-- TypeScriptの厳密な型チェック
-- ESLintルールの遵守
-- 適切なエラーハンドリング
-- 環境に応じたログ出力
+### 修正前の確認
+- [ ] サーバーログで問題を特定
+- [ ] 根本原因を明確に把握
+- [ ] 修正範囲を限定
 
-### 4. パフォーマンス
-- 不要な再レンダリングの回避
-- メモ化の適切な使用
-- バンドルサイズの最適化
+### 修正の実装
+- [ ] 重複保存の修正
+- [ ] ESモジュールの統一
+- [ ] 表示データの統一
+- [ ] 日付フォーマットの統一
 
-## 🔄 定期的なリファクタリング
+### 修正後の確認
+- [ ] サーバー再起動
+- [ ] 動作確認
+- [ ] 新規購入テスト
+- [ ] 既存データの確認
 
-### 月次チェック項目
-- [ ] 重複コードの確認
-- [ ] 大きなファイルの分割
-- [ ] 未使用コードの削除
-- [ ] 型定義の整理
-- [ ] パフォーマンスの測定
+## 🎯 今後の予防策
 
-### リファクタリングのタイミング
-- 新機能追加時
-- バグ修正時
-- コードレビュー時
-- 月次メンテナンス時
+### 1. 新機能開発時
+- 重複保存の可能性を常にチェック
+- 共通ユーティリティの使用を徹底
+- ESモジュールの統一性を維持
 
-## 📚 参考資料
+### 2. コードレビュー時
+- 重複処理がないかチェック
+- 表示データの統一性を確認
+- エラーハンドリングの適切性を確認
 
-- [React Best Practices](https://react.dev/learn)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [ESLint Rules](https://eslint.org/docs/rules/)
-- [Tailwind CSS Guidelines](https://tailwindcss.com/docs) 
+### 3. デバッグ時
+- サーバーログの詳細確認
+- データベースの実際の状態確認
+- 重複除去ロジックの動作確認 

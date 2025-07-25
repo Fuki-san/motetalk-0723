@@ -6,6 +6,16 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import 'dotenv/config';
+import {
+  getTemplateDisplayName,
+  getTemplatePrice,
+  getTemplateIdFromPriceId,
+  removeDuplicatePurchases,
+  sortPurchasesByDate,
+  normalizeAmount,
+  formatDateToISO,
+  formatDateToJapanese
+} from './utils/purchaseUtils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -839,98 +849,97 @@ app.get('/api/purchase-history', authenticateUser, requireAuth, async (req, res)
   try {
     console.log('📋 購入履歴取得リクエスト for user:', req.user.uid);
     
-    // データベースが利用できない場合はエラーを返す
-    if (!db) {
-      console.warn('⚠️ Database not available');
-      return res.status(503).json({ error: 'Database not available' });
-    }
-    
-    const userId = req.user.uid;
-    
-    try {
-      // インデックスエラー回避のため、全購入履歴を取得してメモリ上でフィルタリング
-      const allPurchasesSnapshot = await db.collection('purchases')
-        .where('userId', '==', userId)
-        .get();
+          // データベースが利用できない場合はエラーを返す
+      if (!db) {
+        console.warn('⚠️ Database not available');
+        return res.status(503).json({ error: 'Database not available' });
+      }
       
-      const allPurchases = allPurchasesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const userId = req.user.uid;
       
-      // template_purchasesコレクションからも取得
-      const templatePurchasesSnapshot = await db.collection('template_purchases')
-        .where('userId', '==', userId)
-        .get();
-      
-      const templatePurchases = templatePurchasesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // メモリ上でフィルタリングとソート
-      const subscriptions = allPurchases
-        .filter(purchase => purchase.type === 'subscription')
-        .sort((a, b) => (b.createdAt?.toDate() || new Date()) - (a.createdAt?.toDate() || new Date()))
-        .map(purchase => ({
+      try {
+        // purchasesコレクションのみから取得（重複を避けるため）
+        const allPurchasesSnapshot = await db.collection('purchases')
+          .where('userId', '==', userId)
+          .get();
+        
+        const allPurchases = allPurchasesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        console.log('🔍 データベースから取得した全購入データ:', allPurchases.map(p => ({
+          id: p.id,
+          type: p.type,
+          templateId: p.templateId,
+          templateName: p.templateName,
+          stripeSessionId: p.stripeSessionId,
+          createdAt: p.createdAt?.toDate?.() || p.createdAt,
+          purchasedAt: p.purchasedAt?.toDate?.() || p.purchasedAt
+        })));
+        
+        // サブスクリプション購入履歴（重複除去）
+        const subscriptions = removeDuplicatePurchases(
+          allPurchases.filter(purchase => purchase.type === 'subscription')
+        ).map(purchase => ({
           id: purchase.id,
-          amount: purchase.amount || 1980,
+          amount: normalizeAmount(purchase.amount || 1980),
           createdAt: purchase.createdAt?.toDate() || new Date(),
           status: purchase.status || 'completed'
         }));
-      
-      // purchasesコレクションとtemplate_purchasesコレクションからテンプレート購入を取得
-      const purchasesFromPurchases = allPurchases
-        .filter(purchase => purchase.type === 'template')
-        .map(purchase => ({
-          id: purchase.id,
-          templateId: purchase.templateId,
-          templateName: purchase.templateName || getTemplateDisplayName(purchase.templateId),
-          amount: purchase.amount || getTemplatePrice(purchase.templateId),
-          purchasedAt: purchase.purchasedAt?.toDate() || purchase.createdAt?.toDate() || new Date(),
-          status: purchase.status || 'completed'
-        }));
-      
-      const purchasesFromTemplatePurchases = templatePurchases
-        .filter(purchase => purchase.type === 'template')
-        .map(purchase => ({
-          id: purchase.id,
-          templateId: purchase.templateId,
-          templateName: purchase.templateName || getTemplateDisplayName(purchase.templateId),
-          amount: purchase.amount || getTemplatePrice(purchase.templateId),
-          purchasedAt: purchase.purchasedAt?.toDate() || purchase.createdAt?.toDate() || new Date(),
-          status: purchase.status || 'completed'
-        }));
-      
-      // 重複を除去してマージ
-      const allTemplatePurchases = [...purchasesFromPurchases, ...purchasesFromTemplatePurchases];
-      const uniquePurchases = allTemplatePurchases.filter((purchase, index, self) => 
-        index === self.findIndex(p => p.templateId === purchase.templateId)
-      );
-      
-      const purchases = uniquePurchases.sort((a, b) => 
-        (b.purchasedAt || new Date()) - (a.purchasedAt || new Date())
-      ).map(purchase => ({
-        ...purchase,
-        // 日付をISO文字列に変換
-        purchasedAt: purchase.purchasedAt ? purchase.purchasedAt.toISOString() : new Date().toISOString(),
-        // 金額を数値で確実に返す
-        amount: Number(purchase.amount) || 0,
-        // ステータスを確実に設定
-        status: purchase.status || 'completed'
-      }));
-      
-      const result = {
-        subscriptions,
-        purchases
-      };
-      
-      console.log('✅ 購入履歴取得成功:', {
-        subscriptions: subscriptions.length,
-        purchases: purchases.length
-      });
-      
-      res.json(result);
+        
+        // テンプレート購入履歴（重複除去）
+        const templatePurchases = allPurchases.filter(purchase => purchase.type === 'template');
+        console.log('🔍 元のテンプレート購入数:', templatePurchases.length);
+        
+        const uniquePurchases = removeDuplicatePurchases(templatePurchases);
+        console.log('🔍 重複除去後のテンプレート購入数:', uniquePurchases.length);
+        console.log('🔍 重複除去後の詳細:', uniquePurchases.map(p => ({
+          id: p.id,
+          templateId: p.templateId,
+          templateName: p.templateName,
+          stripeSessionId: p.stripeSessionId
+        })));
+        
+        const purchases = uniquePurchases.map(purchase => {
+          const templateName = purchase.templateName || getTemplateDisplayName(purchase.templateId);
+          const amount = normalizeAmount(purchase.amount || getTemplatePrice(purchase.templateId));
+          const purchasedAt = purchase.purchasedAt?.toDate() || purchase.createdAt?.toDate() || new Date();
+          
+          console.log('🔍 購入データ詳細:', {
+            id: purchase.id,
+            templateId: purchase.templateId,
+            templateName,
+            amount,
+            purchasedAt: purchasedAt.toISOString(),
+            stripeSessionId: purchase.stripeSessionId
+          });
+          
+          return {
+            id: purchase.id,
+            templateId: purchase.templateId,
+            templateName,
+            amount,
+            purchasedAt: formatDateToJapanese(purchasedAt),
+            status: purchase.status || 'completed'
+          };
+        });
+        
+        // 日付でソート（メモリ上で実行）
+        subscriptions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        purchases.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
+        
+        const result = {
+          subscriptions,
+          purchases
+        };
+        
+        console.log('✅ 購入履歴取得成功:', {
+          subscriptions: subscriptions.length,
+          purchases: purchases.length
+        });
+        
+        res.json(result);
       
     } catch (dbError) {
       console.error('❌ Database operation failed:', dbError);
@@ -1952,7 +1961,8 @@ app.post('/webhook', async (req, res) => {
       // テンプレート購入の場合はユーザーの購入済みテンプレートリストを更新
       if (fullSession.mode === 'payment') {
         console.log('🔄 テンプレート購入処理を開始');
-        await handleTemplatePurchase(fullSession);
+        // savePurchaseToDatabaseで既に保存済みのため、ユーザー情報の更新のみ実行
+        await updateUserPurchasedTemplates(fullSession);
       }
       break;
 
@@ -2011,21 +2021,14 @@ async function savePurchaseToDatabase(session) {
       for (const item of lineItems) {
         const priceId = item.price?.id;
         console.log('🔍 priceId:', priceId);
-        // priceIdからtemplateIdを特定
-        if (priceId === 'price_1Rl6WZQoDVsMq3SibYnakW14') {
-          templateId = 'first_message_pack';
-          console.log('✅ priceIdから初回メッセージテンプレートを特定');
-        } else if (priceId === 'price_1Roiu5QoDVsMq3SiYXbdh2xT') {
-          templateId = 'date_invitation_pack';
-          console.log('✅ priceIdからデート誘いテンプレートを特定');
-        } else if (priceId === 'price_1RoiuyQoDVsMq3Si9MQuzT6x') {
-          templateId = 'conversation_topics_pack';
-          console.log('✅ priceIdから会話ネタテンプレートを特定');
+        // 共通ユーティリティを使用してテンプレートIDを特定
+        templateId = getTemplateIdFromPriceId(priceId);
+        if (templateId) {
+          console.log('✅ priceIdからテンプレートを特定:', templateId);
+          break;
         } else {
-          templateId = null;
           console.log('❓ 未知のpriceId、templateIdはnullで保存');
         }
-        if (templateId) break;
       }
     }
 
@@ -2149,21 +2152,14 @@ async function handleTemplatePurchase(session) {
     for (const item of lineItems) {
       const priceId = item.price?.id;
       console.log('🔍 handleTemplatePurchase - priceId:', priceId);
-      // priceIdからtemplateIdを特定（savePurchaseToDatabaseと同じロジック）
-      if (priceId === 'price_1Rl6WZQoDVsMq3SibYnakW14') {
-        templateId = 'first_message_pack';
-        console.log('✅ priceIdから初回メッセージテンプレートを特定');
-      } else if (priceId === 'price_1Roiu5QoDVsMq3SiYXbdh2xT') {
-        templateId = 'date_invitation_pack';
-        console.log('✅ priceIdからデート誘いテンプレートを特定');
-      } else if (priceId === 'price_1RoiuyQoDVsMq3Si9MQuzT6x') {
-        templateId = 'conversation_topics_pack';
-        console.log('✅ priceIdから会話ネタテンプレートを特定');
+      // 共通ユーティリティを使用してテンプレートIDを特定
+      templateId = getTemplateIdFromPriceId(priceId);
+      if (templateId) {
+        console.log('✅ priceIdからテンプレートを特定:', templateId);
+        break;
       } else {
-        templateId = null;
         console.log('❓ 未知のpriceId、templateIdはnull');
       }
-      if (templateId) break;
     }
 
     if (!templateId) {
@@ -2232,27 +2228,82 @@ async function handleTemplatePurchase(session) {
   }
 }
 
-// テンプレート表示名を取得
-function getTemplateDisplayName(templateId) {
-  const templateNames = {
-    'first_message_pack': '初回メッセージパック',
-    'line_transition_pack': 'LINE移行パック',
-    'date_invitation_pack': 'デート誘いパック',
-    'conversation_topics_pack': '会話ネタパック'
-  };
-  return templateNames[templateId] || templateId;
+// ユーザーの購入済みテンプレートリストを更新（重複保存を防ぐ）
+async function updateUserPurchasedTemplates(session) {
+  try {
+    if (!db) {
+      console.error('❌ Firestore未初期化 - テンプレート購入処理をスキップ');
+      return;
+    }
+
+    const customerEmail = session.customer_details?.email;
+    if (!customerEmail) {
+      console.error('❌ カスタマー情報が見つかりません');
+      return;
+    }
+
+    // セッションの商品情報からテンプレートIDを特定（priceIdベース）
+    const lineItems = session.line_items?.data || [];
+    let templateId = null;
+
+    for (const item of lineItems) {
+      const priceId = item.price?.id;
+      console.log('🔍 updateUserPurchasedTemplates - priceId:', priceId);
+      // 共通ユーティリティを使用してテンプレートIDを特定
+      templateId = getTemplateIdFromPriceId(priceId);
+      if (templateId) {
+        console.log('✅ priceIdからテンプレートを特定:', templateId);
+        break;
+      } else {
+        console.log('❓ 未知のpriceId、templateIdはnull');
+      }
+    }
+
+    if (!templateId) {
+      console.error('❌ テンプレートIDを特定できませんでした');
+      return;
+    }
+
+    // ユーザーを特定してテンプレート購入情報を更新
+    const usersQuery = await db.collection('users').where('email', '==', customerEmail).get();
+    
+    if (!usersQuery.empty) {
+      const userDoc = usersQuery.docs[0];
+      const userData = userDoc.data();
+      const purchasedTemplates = userData.purchasedTemplates || [];
+      
+      // 既に購入済みでない場合のみ追加
+      if (!purchasedTemplates.includes(templateId)) {
+        const updatedPurchasedTemplates = [...purchasedTemplates, templateId];
+        
+        await userDoc.ref.update({
+          purchasedTemplates: updatedPurchasedTemplates,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log('✅ ユーザーの購入済みテンプレートリストを更新:', templateId, 'for user:', customerEmail);
+        
+        // 購入完了通知メール
+        const emailTemplate = generateEmailTemplate('template_purchased', {
+          name: userData.name || customerEmail,
+          templateName: getTemplateDisplayName(templateId)
+        });
+        
+        if (emailTemplate) {
+          await sendEmail(customerEmail, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+        }
+      } else {
+        console.log('ℹ️ テンプレートは既に購入済み:', templateId);
+      }
+    } else {
+      console.error('❌ ユーザーが見つかりません:', customerEmail);
+    }
+  } catch (error) {
+    console.error('❌ テンプレート購入処理エラー:', error);
+  }
 }
 
-// テンプレート価格を取得
-function getTemplatePrice(templateId) {
-  const templatePrices = {
-    'first_message_pack': 980,
-    'line_transition_pack': 980,
-    'date_invitation_pack': 980,
-    'conversation_topics_pack': 980
-  };
-  return templatePrices[templateId] || 0;
-}
+// テンプレート関連の関数は共通ユーティリティに移動済み
 
 
 
