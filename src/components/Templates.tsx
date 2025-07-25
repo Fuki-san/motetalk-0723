@@ -35,11 +35,16 @@ const Templates = () => {
       try {
         setLoading(true);
         const status = await checkTemplatePurchaseStatus();
-        setPurchasedTemplates(status.purchasedTemplates || []);
+        console.log('🔄 APIレスポンス:', status);
+        // null値を除外して購入済みテンプレートを設定
+        const validPurchasedTemplates = (status.purchasedTemplates || []).filter((id: string | null) => id !== null);
+        setPurchasedTemplates(validPurchasedTemplates);
         setIsPremiumUser(status.isPremiumUser || false);
         console.log('✅ テンプレート購入状況取得成功:', {
-          purchasedTemplates: status.purchasedTemplates?.length || 0,
-          isPremiumUser: status.isPremiumUser
+          purchasedTemplates: status.purchasedTemplates || [],
+          purchasedTemplatesCount: status.purchasedTemplates?.length || 0,
+          isPremiumUser: status.isPremiumUser,
+          plan: status.plan
         });
       } catch (error) {
         console.error('テンプレート購入状況の取得に失敗:', error);
@@ -47,7 +52,8 @@ const Templates = () => {
         setPurchasedTemplates(userProfile?.purchasedTemplates || []);
         setIsPremiumUser(userProfile?.plan === 'premium');
         console.log('⚠️ フォールバック: userProfileから取得:', {
-          purchasedTemplates: userProfile?.purchasedTemplates?.length || 0,
+          purchasedTemplates: userProfile?.purchasedTemplates || [],
+          purchasedTemplatesCount: userProfile?.purchasedTemplates?.length || 0,
           plan: userProfile?.plan
         });
       } finally {
@@ -95,6 +101,13 @@ const Templates = () => {
 
     try {
       await purchaseTemplate(categoryId);
+      // 購入後に購入状況を再取得
+      await loadTemplatePurchaseStatus();
+      console.log('✅ テンプレート購入完了、購入状況を更新');
+      
+      // 購入済みタブに切り替え
+      setViewMode('purchased');
+      setSelectedCategory(categoryId);
     } catch (error) {
       console.error('テンプレート購入エラー:', error);
       alert('購入処理中にエラーが発生しました');
@@ -113,29 +126,40 @@ const Templates = () => {
     console.log('🔍 テンプレート表示ロジック:', {
       viewMode,
       purchasedTemplates,
+      purchasedTemplatesLength: purchasedTemplates.length,
       isPremiumUser,
-      userProfile: userProfile?.plan
+      userProfile: userProfile?.plan,
+      templateCategories: templateCategories.map(cat => ({ id: cat.id, name: cat.name }))
     });
 
     if (viewMode === 'purchased') {
-      // 購入済みモード: 実際に購入したテンプレートのみ表示
+      // 購入済みモード: 実際に購入したテンプレートのみ表示（サブスク会員も無料会員も同じ）
       const purchasedCategories = templateCategories.filter(category => 
-        purchasedTemplates.includes(category.id) || 
-        (category.id === 'premium_pack' && isPremiumUser)
+        purchasedTemplates.includes(category.id)
       );
-      console.log('📦 購入済みテンプレート:', purchasedCategories.map(cat => cat.name));
+      console.log('📦 購入済みテンプレート:', purchasedCategories.map(cat => ({ id: cat.id, name: cat.name })));
+      console.log('📦 購入済みテンプレート数:', purchasedCategories.length);
       return purchasedCategories;
     }
-    // ショップモード: 未購入のテンプレートを表示
-    const availableCategories = templateCategories.filter(category => 
-      !purchasedTemplates.includes(category.id) && 
-      (category.id !== 'premium_pack' || isPremiumUser)
-    );
-    console.log('🛒 購入可能テンプレート:', availableCategories.map(cat => cat.name));
+    
+    // ショップモード: 未購入のテンプレートを表示（サブスク会員も無料会員も同じ）
+    const availableCategories = templateCategories.filter(category => {
+      const isPurchased = purchasedTemplates.includes(category.id);
+      return !isPurchased;
+    });
+    
+    console.log('🛒 購入可能テンプレート:', availableCategories.map(cat => ({ id: cat.id, name: cat.name })));
+    console.log('🔒 購入済みテンプレート（Shopから除外）:', purchasedTemplates);
     return availableCategories;
   };
 
   const displayCategories = getDisplayTemplates();
+  
+  // 購入済みモードで選択されたカテゴリが購入済みでない場合は選択をクリア
+  if (viewMode === 'purchased' && selectedCategory && !purchasedTemplates.includes(selectedCategory)) {
+    setSelectedCategory('');
+  }
+  
   const selectedCategoryData = templateCategories.find(cat => cat.id === selectedCategory);
 
   if (loading) {
@@ -200,7 +224,6 @@ const Templates = () => {
                   {displayCategories.map((category) => {
                     const Icon = category.icon;
                     const isPurchased = purchasedTemplates.includes(category.id);
-                    const isPremium = category.id === 'premium_pack' && isPremiumUser;
                     
                     return (
                       <button
@@ -216,10 +239,10 @@ const Templates = () => {
                         <div className="flex-1 text-left">
                           <div className="font-medium">{category.name}</div>
                           <div className="text-xs opacity-75">
-                            {isPurchased || isPremium ? '購入済み' : `¥${category.price.toLocaleString()}`}
+                            {isPurchased ? '購入済み' : `¥${category.price.toLocaleString()}`}
                           </div>
                         </div>
-                        {(isPurchased || isPremium) && (
+                        {isPurchased && (
                           <Check className="w-4 h-4" />
                         )}
                       </button>
@@ -281,9 +304,8 @@ const Templates = () => {
                 </div>
 
                 {/* Templates Display */}
-                {purchasedTemplates.includes(selectedCategoryData.id) || 
-                 (selectedCategoryData.id === 'premium_pack' && isPremiumUser) ? (
-                  // 購入済みテンプレート: 箇条書きで表示（鍵なし）
+                {viewMode === 'purchased' && purchasedTemplates.includes(selectedCategoryData.id) ? (
+                  // 購入済みモード: 購入済みテンプレートの全内容を表示
                   <div className="bg-white rounded-2xl shadow-xl p-6">
                     <div className="flex items-center space-x-2 mb-4">
                       <Check className="w-5 h-5 text-green-500" />
@@ -308,7 +330,7 @@ const Templates = () => {
                     </div>
                   </div>
                 ) : viewMode === 'shop' ? (
-                  // ショップモード: 未購入テンプレートのプレビュー表示
+                  // ショップモード: 未購入テンプレートは1文だけプレビュー、全内容・コピー不可
                   <div className="grid grid-cols-1 gap-6">
                     {selectedCategoryData.templates.slice(0, 1).map((template) => (
                       <div key={template.id} className="bg-white rounded-2xl shadow-xl p-6">
@@ -316,18 +338,27 @@ const Templates = () => {
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
                               <Lock className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-500">プレビュー</span>
+                              <span className="text-sm text-gray-500">
+                                {purchasedTemplates.includes(selectedCategoryData.id) 
+                                  ? 'プレビュー（購入済み - 購入済みページで全内容を確認）' 
+                                  : 'プレビュー（購入で全30種解放）'
+                                }
+                              </span>
                             </div>
                             <p className="text-gray-800 leading-relaxed">
-                              {template.content.substring(0, 100)}...
+                              {template.content.substring(0, 40)}...
                             </p>
                           </div>
                         </div>
-                        
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 text-gray-400">
                             <Lock className="w-4 h-4" />
-                            <span>購入後に全30種のテンプレートが利用可能</span>
+                            <span>
+                              {purchasedTemplates.includes(selectedCategoryData.id)
+                                ? '購入済み - 購入済みページで全テンプレートを確認'
+                                : '購入後に全30種のテンプレートが利用可能'
+                              }
+                            </span>
                           </div>
                         </div>
                       </div>

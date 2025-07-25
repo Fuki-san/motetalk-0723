@@ -1,659 +1,125 @@
-# トラブルシューティングガイド
-
-MoteTalkプロジェクトでよく発生する問題とその解決策について説明します。
-
-## 🚨 よくある問題
-
-### 1. SPAキャッシュ問題（重要）
-
-#### 症状
-```
-❌ Static file not found: /index-gfGlGWnJ.js
-❌ Static file not found: /index-D4L134hE.css
-Refused to apply style from '...' because its MIME type ('text/html') is not a supported stylesheet MIME type
-```
-
-#### 原因
-- ブラウザが古いビルドファイル名をキャッシュしている
-- HTMLファイル内のファイル名と実際のビルドファイル名が不一致
-- 静的ファイル配信の設定が不適切
-- Viteのハッシュ付きファイル名によるキャッシュバスティングの問題
-
-#### 解決策
-
-##### 1. サーバー側での動的HTML生成
-```javascript
-// HTMLファイルを読み込んで動的に更新
-let htmlContent = fs.readFileSync(indexPath, 'utf8');
-
-// 現在のビルドファイルを検出
-const distFiles = fs.readdirSync(path.join(__dirname, '../dist'));
-const jsFile = distFiles.find(file => file.endsWith('.js') && file.startsWith('index-'));
-const cssFile = distFiles.find(file => file.endsWith('.css') && file.startsWith('index-'));
-
-if (jsFile && cssFile) {
-  // HTML内のファイル名を現在のビルドファイルに置換
-  htmlContent = htmlContent.replace(
-    /src="\/index-[^"]+\.js"/g,
-    `src="/${jsFile}"`
-  );
-  htmlContent = htmlContent.replace(
-    /href="\/index-[^"]+\.css"/g,
-    `href="/${cssFile}"`
-  );
-}
-```
-
-##### 2. キャッシュ制御ヘッダーの設定
-```javascript
-// キャッシュ制御ヘッダーを設定
-res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-res.setHeader('Pragma', 'no-cache');
-res.setHeader('Expires', '0');
-res.setHeader('Surrogate-Control', 'no-store');
-res.setHeader('X-Content-Type-Options', 'nosniff');
-```
-
-##### 3. 静的ファイル配信の改善
-```javascript
-app.use(express.static(staticPath, {
-  maxAge: '0',
-  etag: false,
-  lastModified: false,
-  setHeaders: (res, path) => {
-    // MIMEタイプとキャッシュ制御を設定
-  }
-}));
-```
-
-#### 根本的な解決策（重要）
-
-##### 1. キャッシュバスティング付きHTML生成
-```javascript
-// キャッシュバスティング用のタイムスタンプを追加
-const timestamp = Date.now();
-
-// HTML内のファイル名を現在のビルドファイルに置換（キャッシュバスティング付き）
-htmlContent = htmlContent.replace(
-  /src="\/index-[^"]+\.js"/g,
-  `src="/${jsFile}?v=${timestamp}"`
-);
-htmlContent = htmlContent.replace(
-  /href="\/index-[^"]+\.css"/g,
-  `href="/${cssFile}?v=${timestamp}"`
-);
-```
-
-##### 2. 強力なキャッシュ制御ヘッダー
-```javascript
-res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-res.setHeader('Pragma', 'no-cache');
-res.setHeader('Expires', '0');
-res.setHeader('Surrogate-Control', 'no-store');
-res.setHeader('X-Content-Type-Options', 'nosniff');
-res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
-```
-
-##### 3. 静的ファイル配信の最適化
-```javascript
-// JSファイルの配信
-app.use((req, res, next) => {
-  if (req.path.match(/\/index-.*\.js/)) {
-    console.log(`📁 Serving JS file: ${req.path}`);
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    // キャッシュ制御ヘッダーを設定
-    return express.static(staticPath)(req, res, next);
-  }
-  next();
-});
-
-// CSSファイルの配信
-app.use((req, res, next) => {
-  if (req.path.match(/\/index-.*\.css/)) {
-    console.log(`📁 Serving CSS file: ${req.path}`);
-    res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    // キャッシュ制御ヘッダーを設定
-    return express.static(staticPath)(req, res, next);
-  }
-  next();
-});
-```
-
-#### 重要な学び
-
-##### 1. 問題の真の原因
-- **ブラウザキャッシュ**: 古いHTMLファイルがキャッシュされている
-- **静的ファイル配信の順序**: `express.static`が動的HTML生成より先に実行される
-- **path-to-regexpエラー**: ワイルドカードパス指定でエラーが発生
-
-##### 2. 解決のポイント
-- **動的HTML生成**: サーバーが現在のビルドファイルを自動検出
-- **キャッシュバスティング**: タイムスタンプ付きURLでキャッシュを無効化
-- **静的ファイル配信の分離**: `index.html`を除外して動的生成を優先
-- **適切なMIME type設定**: 各ファイルタイプに応じたContent-Type
-
-##### 3. デバッグの重要性
-- **ローカルテスト**: プッシュ前に必ずローカルで動作確認
-- **ログの活用**: 詳細なログで問題を特定
-- **段階的な修正**: 一度に大きな変更を避け、小さな修正を積み重ね
-
-#### 予防策
-- 本番環境では適切なキャッシュ戦略を実装
-- ビルド時にファイル名の一貫性を確保
-- デプロイ後のハードリフレッシュを推奨
-- 開発環境ではキャッシュを無効化
-- **キャッシュバスティング付きURLを使用**
-- **静的ファイル配信の順序に注意**
-- **Clear-Site-Dataヘッダーの使用に注意**（認証状態をリセットする可能性）
-
-### 2. Gemini API 503エラー
-
-#### 症状
-```
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent 503 (Service Unavailable)
-Gemini API Error: ow: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent: [503 ] The model is overloaded. Please try again later.
-```
-
-#### 原因
-- Gemini APIの一時的な過負荷状態
-- モデルが過負荷でリクエストを処理できない
-
-#### 解決策
-1. **リトライ機能の実装**
-   ```javascript
-   const retryApiCall = async (apiCall, maxRetries = 3, delay = 1000) => {
-     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-       try {
-         return await apiCall();
-       } catch (error) {
-         if (error.message.includes('503') || error.message.includes('overloaded')) {
-           if (attempt < maxRetries) {
-             const waitTime = delay * Math.pow(2, attempt - 1);
-             await new Promise(resolve => setTimeout(resolve, waitTime));
-             continue;
-           }
-         }
-         throw error;
-       }
-     }
-   };
-   ```
-
-2. **フォールバック機能の強化**
-   - API失敗時に適切なフォールバック返信を提供
-   - ユーザーに分かりやすいエラーメッセージを表示
-
-3. **指数バックオフ**
-   - リトライ間隔を指数関数的に増加
-   - サーバー負荷を軽減
-
-#### 予防策
-- API使用量の監視
-- 適切なレート制限の設定
-- フォールバック機能の常時準備
-- **リトライ機能の実装**（503エラー対策）
-- **指数バックオフの使用**（サーバー負荷軽減）
-
-### 3. Stripe決済後のリダイレクト問題
-
-#### 症状
-- 決済完了後にログインしていないページに戻る
-- 認証状態がリセットされる
-- 適切なページに遷移しない
-
-#### 原因
-- キャッシュ設定による認証状態のリセット
-- 決済完了後の適切なリダイレクト処理が不十分
-
-#### 解決策
-1. **キャッシュ設定の調整**
-   ```javascript
-   // Clear-Site-Dataヘッダーを削除して認証状態を保持
-   // res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
-   ```
-
-2. **適切なリダイレクト処理**
-   ```javascript
-   // 購入タイプに応じた自動リダイレクト
-   if (purchaseInfo.type === 'subscription') {
-     window.location.href = '/dashboard';
-   } else {
-     window.location.href = '/templates?view=purchased';
-   }
-   ```
-
-3. **Webhook処理の完了待機**
-   - 決済完了後、Webhook処理の完了を待機
-   - 適切なタイミングでリダイレクト
-
-#### 予防策
-- 決済フローのテスト
-- 認証状態の確認
-- 適切なエラーハンドリング
-- **Clear-Site-Dataヘッダーの削除**（認証状態保持）
-- **Webhook処理完了の待機**（適切なタイミングでのリダイレクト）
-- **購入タイプに応じた自動リダイレクト**（ユーザー体験向上）
-
-### 4. 静的ファイル配信エラー
-
-### 4. path-to-regexpエラー
-
-#### 症状
-```
-TypeError: Missing parameter name at 1: https://git.new/pathToRegexpError
-```
-
-#### 原因
-- Express.jsの最新バージョンで`app.get('*', ...)`が正しく処理されない
-
-#### 解決策
-```javascript
-// 修正前
-app.get('*', (req, res) => { ... });
-
-// 修正後
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
-  // SPAルーティング処理
-});
-```
-
-### 3. Firebase認証エラー
-
-#### 症状
-```
-Firebase: Error (auth/unauthorized-domain).
-```
-
-#### 原因
-- 承認済みドメインに`localhost`が含まれていない
-- 開発環境のドメインが登録されていない
-
-#### 解決策
-1. **Firebase Consoleで承認済みドメインを確認**
-   - Authentication > Settings > 承認済みドメイン
-   - `localhost`が含まれていることを確認
-
-2. **開発環境のドメインを追加**
-   - WebContainer環境の場合: `*.webcontainer-api.io`
-   - その他の開発環境: 具体的なドメイン
-
-3. **環境変数の確認**
-   ```env
-   VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
-   ```
-
-### 4. Stripe決済エラー
-
-#### 症状
-```
-Stripe: No such price: 'price_xxx'
-```
-
-#### 原因
-- 動的価格設定を使用している
-- 実際のStripe Price IDを使用していない
-- テストモードと本番モードの混同
-
-#### 解決策
-1. **Stripe DashboardでPrice IDを確認**
-   - Products > 該当商品 > Pricing
-   - 実際のPrice IDをコピー
-
-2. **コード内で実際のPrice IDを使用**
-   ```javascript
-   const priceIds = {
-     premium_monthly: 'price_1Rl6VZQoDVsMq3SiLcu7GnkA' // 実際のID
-   };
-   ```
-
-3. **テストモードと本番モードの区別**
-   - 開発時: テストモードのキーを使用
-   - 本番時: 本番モードのキーを使用
-
-### 5. 環境変数エラー
-
-#### 症状
-```
-Error: Cannot find module 'firebase-admin'
-```
-
-#### 原因
-- 環境変数が正しく設定されていない
-- 必須の環境変数が不足している
-
-#### 解決策
-1. **環境変数の確認**
-   ```bash
-   # ローカル開発
-   cat .env
-   
-   # Render環境
-   # Renderダッシュボードで環境変数を確認
-   ```
-
-2. **必須環境変数の確認**
-   ```env
-   # 必須環境変数
-   VITE_GEMINI_API_KEY=your_gemini_api_key
-   VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   VITE_FIREBASE_API_KEY=your_firebase_api_key
-   FIREBASE_PROJECT_ID=your_project_id
-   FIREBASE_CLIENT_EMAIL=your_service_account_email
-   FIREBASE_PRIVATE_KEY=your_private_key
-   ```
-
-3. **特殊文字の処理**
-   - 改行文字を含む環境変数は適切にエスケープ
-   - 引用符の使用に注意
-
-### 6. ビルドエラー
-
-#### 症状
-```
-npm ERR! code ELIFECYCLE
-npm ERR! errno 1
-```
-
-#### 原因
-- 依存関係の問題
-- Node.jsバージョンの不整合
-- TypeScriptエラー
-
-#### 解決策
-1. **依存関係の再インストール**
-   ```bash
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
-
-2. **Node.jsバージョンの確認**
-   ```bash
-   node --version  # 18.x以上推奨
-   npm --version
-   ```
-
-3. **TypeScriptエラーの確認**
-   ```bash
-   npm run type-check
-   ```
-
-### 7. パフォーマンス問題
-
-#### 症状
-```
-First Contentful Paint: 5.2s
-```
-
-#### 原因
-- バンドルサイズが大きい
-- 画像の最適化不足
-- ネットワーク遅延
-
-#### 解決策
-1. **バンドルサイズの最適化**
-   ```typescript
-   // 動的インポートによる遅延読み込み
-   const Dashboard = lazy(() => import('./components/Dashboard'));
-   ```
-
-2. **画像の最適化**
-   - SVGアイコンの使用
-   - 画像の圧縮
-   - WebP形式の使用
-
-3. **キャッシュ戦略の改善**
-   ```javascript
-   app.use(express.static(path.join(__dirname, '../dist'), {
-     maxAge: '1y'
-   }));
-   ```
-
-## 🔧 デバッグツール
-
-### 1. ログの確認
-
-#### サーバーログ
-```javascript
-// 構造化ログの出力
-console.log('🛒 Checkout session作成リクエスト:', {
-  type: req.body.type,
-  planId: req.body.planId,
-  userId: req.user?.uid
-});
-```
-
-#### ブラウザコンソール
-```javascript
-// フロントエンドでのデバッグ
-console.log('Firebase設定値:', {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
-});
-```
-
-### 2. ネットワークタブの確認
-
-#### リクエスト/レスポンスの確認
-1. ブラウザの開発者ツールを開く
-2. Networkタブを選択
-3. 問題のあるリクエストを確認
-4. ステータスコード、レスポンスヘッダー、レスポンスボディを確認
-
-### 3. 環境変数の確認
-
-#### ローカル開発
-```bash
-# .envファイルの確認
-cat .env
-
-# 環境変数の確認
-echo $VITE_GEMINI_API_KEY
-```
-
-### 4. キャッシュ設定の確認
-
-#### HTTPヘッダーの確認
-```bash
-# HTMLファイルのヘッダー確認
-curl -I http://localhost:3001/
-
-# JSファイルのヘッダー確認
-curl -I http://localhost:3001/index-*.js
-
-# Clear-Site-Dataヘッダーの有無を確認
-curl -I http://localhost:3001/ | grep -i "clear-site-data"
-```
-
-#### 認証状態の確認
-```bash
-# ブラウザの開発者ツールで確認
-# Application > Storage > Local Storage
-# Application > Storage > Session Storage
-# Application > Cookies
-```
-
-#### Render環境
-1. Renderダッシュボードにアクセス
-2. 該当サービスを選択
-3. Environmentタブで環境変数を確認
-
-## 📊 問題の診断手順
-
-### 1. 基本確認
-- [ ] アプリケーションが起動しているか
-- [ ] ネットワーク接続が正常か
-- [ ] 環境変数が正しく設定されているか
-
-### 2. ログの確認
-- [ ] サーバーログにエラーがないか
-- [ ] ブラウザコンソールにエラーがないか
-- [ ] ネットワークタブでリクエストが正常か
-
-### 3. 機能別確認
-- [ ] 認証機能が動作するか
-- [ ] AI返信生成が動作するか
-- [ ] 決済機能が動作するか
-
-### 4. パフォーマンス確認
-- [ ] 初回読み込み時間
-- [ ] API応答時間
-- [ ] エラー率
-
-## 🚨 緊急時の対応
-
-### 1. 本番環境での問題
-
-#### 即座に確認すべき項目
-1. **Renderログの確認**
-   - エラーログの有無
-   - メモリ使用量
-   - CPU使用量
-
-2. **ヘルスチェック**
-   ```bash
-   curl https://motetalk-0723.onrender.com/api/health
-   ```
-
-3. **環境変数の確認**
-   - Renderダッシュボードで環境変数を確認
-   - 必須環境変数が不足していないか
-
-#### 緊急時の対応手順
-1. **問題の特定**
-   - ログの確認
-   - エラーメッセージの分析
-   - 影響範囲の特定
-
-2. **一時的な対処**
-   - 必要に応じてサービスを停止
-   - ユーザーへの通知
-
-3. **根本的な解決**
-   - 問題の原因を特定
-   - 修正の実装
-   - テストの実行
-
-### 2. ロールバック手順
-
-#### コードのロールバック
-```bash
-# 前のコミットに戻す
-git log --oneline -5
-git revert <commit-hash>
-
-# または特定のタグに戻す
-git checkout <tag-name>
-```
-
-#### 環境変数のロールバック
-1. Renderダッシュボードで環境変数を確認
-2. 問題のある環境変数を修正
-3. サービスを再起動
-
-## 📚 参考資料
-
-### 公式ドキュメント
-- [Express.js Error Handling](https://expressjs.com/en/guide/error-handling.html)
-- [Firebase Troubleshooting](https://firebase.google.com/docs/projects/troubleshooting)
-- [Stripe Error Handling](https://stripe.com/docs/error-handling)
-- [Render Troubleshooting](https://render.com/docs/troubleshooting-deploys)
-
-### コミュニティリソース
-- [Stack Overflow - Express.js](https://stackoverflow.com/questions/tagged/express)
-- [Firebase Community](https://firebase.google.com/community)
-- [Stripe Community](https://support.stripe.com/)
-
-### ツール
-- [Postman](https://www.postman.com/) - APIテスト
-- [Chrome DevTools](https://developers.google.com/web/tools/chrome-devtools) - ブラウザデバッグ
-- [Render Logs](https://render.com/docs/logs) - ログ監視
-
-## 🔍 購入後の状態管理問題（2025-07-24 追加）
-
-### 1. 購入履歴APIの500エラー
-- **問題**: `/api/purchase-history`で500エラーが発生
-- **原因**: Firestoreの複合インデックスが不足している
-- **調査結果**: `where`と`orderBy`を組み合わせたクエリでインデックスエラーが発生
-- **教訓**: Firestoreの複合インデックスが必要なクエリの設計に注意
-- **解決策**: 
-  - 複合クエリを単純なクエリに変更
-  - メモリ上でフィルタリングとソートを実行
-  - インデックスエラーを回避
-
-### 2. ユーザープラン判定の問題
-- **問題**: 購入後もユーザーが無料プランとして表示される
-- **原因**: `useUserData.ts`で常に`plan: 'free'`を返している
-- **調査結果**: 実際の購入情報がフロントエンドに反映されていない
-- **教訓**: 購入後の状態更新の仕組みが不完全
-- **解決策**: 
-  - `useUserData.ts`を修正して実際のAPIからユーザー情報を取得
-  - `/api/user-profile`エンドポイントを追加
-  - 購入履歴から最新のサブスクリプション状態を確認
-  - 購入済みテンプレートも含めて取得
-
-### 3. 購入後の状態更新の問題
-- **問題**: Webhook処理後のユーザー情報更新が不完全
-- **原因**: フロントエンドで購入状態が反映されない
-- **調査結果**: データベース更新とフロントエンド状態の同期が取れていない
-- **教訓**: 購入完了後の状態管理の重要性
-- **解決策**: 
-  - SuccessPageで購入後にトークンをリフレッシュ
-  - useUserDataフックにrefreshUserData関数を追加
-  - Dashboardでページフォーカス時にユーザー情報を再取得
-  - 購入後の状態同期を改善
-
-### 4. テンプレート購入表示の問題
-- **問題**: 購入済みテンプレートが正しく表示されない
-- **原因**: 購入後の状態更新が不完全
-- **調査結果**: テンプレート購入状況の取得と表示ロジックに問題
-- **教訓**: 購入後の状態同期の重要性
-- **解決策**: 
-  - Templatesコンポーネントでページフォーカス時に購入状況を再取得
-  - 詳細なログ出力でデバッグを改善
-  - 購入済みテンプレートの表示ロジックを改善
-
-## 🔍 購入後の状態管理問題（2025-07-24 追加）
-
-### 5. Webhook処理後のデータベース更新問題
-- **問題**: 購入処理は成功するが、購入履歴が0件のまま
-- **原因**: Stripe Webhookが正しく処理されていない可能性
-- **調査結果**: 
-  - Checkout session作成は成功
-  - テンプレート購入状況確認APIは呼ばれている
-  - 購入履歴取得APIも呼ばれている
-  - しかし購入履歴が0件（`subscriptions: 0, purchases: 0`）
-  - **重要発見**: ログにWebhook受信の記録がない
-- **教訓**: Webhook処理の重要性とデバッグの必要性
-- **調査項目**:
-  1. Stripe Webhookの設定確認
-  2. Webhookエンドポイントの動作確認
-  3. データベースへの購入情報保存確認
-  4. 購入後の状態更新フローの確認
-- **解決策**: 
-  - Webhook処理の詳細ログ追加
-  - データベース保存処理の確認
-  - 購入後の状態更新フローの改善
-- **具体的な調査手順**:
-  1. Render環境でのSTRIPE_WEBHOOK_SECRET設定確認
-  2. Stripe DashboardでのWebhook設定確認
-  3. Webhookエンドポイントの動作テスト
-  4. 購入後のデータベース保存確認
-- **根本原因発見**: Stripe WebhookエンドポイントURLが不完全
-  - 現在: `https://motetalk-0723.onrender.com`
-  - 正しい: `https://motetalk-0723.onrender.com/webhook`
-- **解決策**: Stripe DashboardでWebhookエンドポイントURLを修正
-- **追加発見**: Webhook Secretの設定が必要
-  - ローカル開発: Stripe CLIで取得したSecretを使用
-  - 本番環境: Render環境変数で`STRIPE_WEBHOOK_SECRET`を設定
-- **学び**: 
-  - Webhookエンドポイントは完全なパス（`/webhook`含む）を指定する必要がある
-  - Webhook Secretは開発環境と本番環境で別々に設定する必要がある
-  - Stripe CLIを使ったローカルテストが重要
-- **改善点**:
-  - Webhook設定の自動化（CI/CDで環境変数管理）
-  - Webhook受信の監視とアラート設定
-  - 購入後の状態更新の確実性向上 
+# トラブルシューティング
+
+## 現在の主要問題（2025-07-25）
+
+### 1. アカウント削除時の購入履歴残存問題
+
+**問題の詳細：**
+- アカウント削除を実行しても、購入履歴が完全に削除されていない
+- 再ログイン時に前の購入履歴が残っている
+- サーバーログでは会話履歴の削除は成功しているが、購入履歴の削除ログが表示されていない
+
+**期待される動作：**
+- アカウント削除時に購入履歴、サブスクリプション履歴、テンプレート購入状況が完全に削除される
+- 再ログイン時に購入履歴が空の状態になる
+
+**現在の状況：**
+- サーバー側のコードは修正済みだが、実際の削除処理が実行されていない
+- 購入履歴削除のログが出力されていない
+
+**解決策：**
+- アカウント削除APIの購入履歴削除処理をデバッグ
+- `userId`の一致確認とデータ取得ロジックの見直し
+
+### 2. テンプレート購入履歴の商品名表示問題
+
+**問題の詳細：**
+- 購入履歴で「テンプレートパック」という汎用的な表示になっている
+- 具体的な商品名（例：「初回メッセージ神パターン集」「デート誘いテンプレート」）が表示されていない
+
+**期待される動作：**
+- 購入履歴に具体的な商品名が表示される
+- 例：「初回メッセージ神パターン集」「デート誘いテンプレート」「告白テンプレート」など
+
+**現在の状況：**
+- `getPurchasedTemplateInfo`関数は修正済みだが、実際の表示が改善されていない
+- フロントエンドでエラーが発生している可能性
+
+**解決策：**
+- 購入履歴のデータ構造を確認
+- テンプレート名の取得ロジックを修正
+
+### 3. サブスク会員のテンプレート表示問題
+
+**問題の詳細：**
+- サブスク会員がテンプレートページのショップタブで全てのテンプレートを見ることができる
+- 未購入のテンプレートのみが表示されるべき
+
+**期待される動作：**
+- サブスク会員でもショップタブでは未購入テンプレートのみが表示される
+- 購入済みテンプレートは購入済みタブでのみ表示される
+
+**現在の状況：**
+- ショップタブの表示ロジックは修正済みだが、実際の動作が改善されていない
+- サブスク会員でも全てのテンプレートが表示されている
+
+**解決策：**
+- テンプレート表示ロジックのデバッグ
+- 購入状況の取得と表示フィルタリングの確認
+
+### 4. テンプレート購入後の反映問題
+
+**問題の詳細：**
+- テンプレートを購入しても、購入済みタブに表示されない
+- 購入後に購入済みタブに自動切り替えされない
+
+**期待される動作：**
+- テンプレート購入後に購入済みタブに自動切り替え
+- 購入したテンプレートが購入済みタブに表示される
+
+**現在の状況：**
+- `handlePurchase`関数は修正済みだが、実際の動作が改善されていない
+- 購入後の状態更新が正しく動作していない
+
+**解決策：**
+- 購入処理後の状態更新ロジックのデバッグ
+- 購入済みテンプレートの取得と表示ロジックの確認
+
+### 5. サブスク会員のショップタブ内容問題
+
+**問題の詳細：**
+- サブスク会員のテンプレートページで、ショップタブ内に購入済みテンプレートのコンテンツが表示されている
+- ショップタブは未購入テンプレートのみを表示すべき
+
+**期待される動作：**
+- ショップタブでは未購入テンプレートのみが表示される
+- 購入済みテンプレートのコンテンツは購入済みタブでのみ表示される
+
+**現在の状況：**
+- ショップタブの表示ロジックは修正済みだが、実際の動作が改善されていない
+- サブスク会員のショップタブに購入済みコンテンツが表示されている
+
+**解決策：**
+- ショップタブの表示フィルタリングロジックのデバッグ
+- 購入状況の取得と表示制御の確認
+
+## 根本原因の分析
+
+### データフローの問題
+1. **購入履歴の削除処理**：サーバー側のコードは正しいが、実際の削除処理が実行されていない
+2. **フロントエンドの状態管理**：修正したコードが実際の動作に反映されていない
+3. **データの同期問題**：購入状況の取得と表示の間にタイミングの問題がある
+
+### デバッグが必要な箇所
+1. アカウント削除時の購入履歴削除処理
+2. テンプレート購入履歴のデータ取得
+3. テンプレート表示のフィルタリングロジック
+4. 購入後の状態更新処理
+
+## 次のステップ
+
+1. **サーバー側のデバッグ**
+   - アカウント削除APIの購入履歴削除処理を詳細にログ出力
+   - データ取得と削除の条件を確認
+
+2. **フロントエンドのデバッグ**
+   - 購入履歴の表示処理を詳細にログ出力
+   - テンプレート表示のフィルタリング処理を確認
+
+3. **データ構造の確認**
+   - 購入履歴のデータ構造を確認
+   - テンプレート購入状況のデータ構造を確認
+
+4. **段階的な修正**
+   - 各問題を個別に修正
+   - 修正後に動作確認を実施 

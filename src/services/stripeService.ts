@@ -35,6 +35,7 @@ export interface CreateCheckoutSessionRequest {
   type: 'subscription' | 'one_time';
   planId?: string;
   templateId?: string;
+  priceId?: string;
   successUrl: string;
   cancelUrl: string;
 }
@@ -203,29 +204,49 @@ export const cancelSubscription = async (): Promise<void> => {
 
 // テンプレートパック購入
 export const purchaseTemplate = async (templateId: string): Promise<void> => {
+  console.log('🚀 テンプレート購入開始:', templateId);
+  
   try {
     const stripe = await getStripe();
     if (!stripe) {
       throw new Error('Stripe is not available');
     }
 
+    // templateDataからpriceIdを取得
+    const templateData = await import('../data/templateData');
+    const template = templateData.templateCategories.find(t => t.id === templateId);
+    
+    if (!template) {
+      throw new Error(`Template not found: ${templateId}`);
+    }
+
+    console.log('💳 Checkout session作成中...', {
+      templateId,
+      priceId: template.priceId,
+      price: template.price
+    });
+
     const session = await createCheckoutSession({
       type: 'one_time',
       templateId,
+      priceId: template.priceId, // priceIdを追加
       successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${window.location.origin}/templates`
     });
 
+    console.log('✅ Session作成完了、Stripeにリダイレクト中...', session.sessionId);
     const result = await stripe.redirectToCheckout({
       sessionId: session.sessionId
     });
 
     if (result.error) {
+      console.error('❌ Stripe redirect error:', result.error);
       throw new Error(result.error.message);
     }
 
+    console.log('✅ Stripe redirect成功');
   } catch (error) {
-    console.error('Template purchase error:', error);
+    console.error('❌ テンプレート購入エラー:', error);
     throw error;
   }
 };

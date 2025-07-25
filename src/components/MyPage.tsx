@@ -74,12 +74,26 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     const pack = templatePacks.find(p => p.id === templateId);
     const purchase = purchaseHistory?.purchases?.find((p: any) => p.templateId === templateId);
     
-    return pack ? {
-      id: templateId,
-      name: pack.name,
-      price: pack.price,
-      purchaseDate: purchase?.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'
-    } : null;
+    if (pack) {
+      return {
+        id: templateId,
+        name: pack.name,
+        price: pack.price,
+        purchaseDate: purchase?.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'
+      };
+    }
+    
+    // テンプレートパックが見つからない場合、購入履歴から名前を取得
+    if (purchase) {
+      return {
+        id: templateId,
+        name: purchase.templateName || 'テンプレートパック',
+        price: purchase.amount,
+        purchaseDate: purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'
+      };
+    }
+    
+    return null;
   };
 
   const handleSubscribe = async (planId: string) => {
@@ -313,20 +327,46 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                       <Crown className="w-5 h-5 mr-2" />
                       サブスクリプション履歴
                     </h3>
-                    {purchaseHistory.subscriptions.map((sub: any) => (
-                      <div key={sub.id} className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 mb-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium text-gray-800">プレミアムプラン</h4>
-                            <p className="text-sm text-gray-600">月額 ¥{sub.amount.toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">
-                              {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('ja-JP') : '購入日不明'}
-                            </p>
+                    {purchaseHistory.subscriptions.map((sub: any) => {
+                      const isActive = sub.status === 'active';
+                      const isCanceled = sub.status === 'canceled';
+                      
+                      return (
+                        <div key={sub.id} className={`border rounded-xl p-4 mb-3 ${
+                          isActive 
+                            ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-medium text-gray-800">プレミアムプラン</h4>
+                                {isActive && (
+                                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                    現在利用中
+                                  </span>
+                                )}
+                                {isCanceled && (
+                                  <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                                    解約済み
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600">月額 ¥{sub.amount.toLocaleString()}</p>
+                              <p className="text-xs text-gray-500">
+                                {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('ja-JP') : '購入日不明'}
+                                {sub.canceledAt && (
+                                  <span className="ml-2">
+                                    (解約: {new Date(sub.canceledAt).toLocaleDateString('ja-JP')})
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <Crown className={`w-5 h-5 ${isActive ? 'text-yellow-500' : 'text-gray-400'}`} />
                           </div>
-                          <Crown className="w-5 h-5 text-yellow-500" />
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -338,20 +378,29 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                       テンプレート購入履歴
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {purchaseHistory.purchases.map((purchase: any) => (
-                        <div key={purchase.id} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-800">{purchase.templateName}</h4>
-                              <p className="text-sm text-gray-600">¥{purchase.amount.toLocaleString()}</p>
-                              <p className="text-xs text-gray-500">
-                                {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'}
-                              </p>
+                      {purchaseHistory.purchases.map((purchase: any) => {
+                        const templateInfo = getPurchasedTemplateInfo(purchase.templateId);
+                        
+                        return (
+                          <div key={purchase.id} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium text-gray-800">
+                                  {templateInfo ? templateInfo.name : purchase.templateName}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  {templateInfo ? `${templateInfo.name}` : 'テンプレートパック'}
+                                </p>
+                                <p className="text-sm text-gray-600">¥{purchase.amount.toLocaleString()}</p>
+                                <p className="text-xs text-gray-500">
+                                  {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'}
+                                </p>
+                              </div>
+                              <Check className="w-5 h-5 text-green-500" />
                             </div>
-                            <Check className="w-5 h-5 text-green-500" />
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

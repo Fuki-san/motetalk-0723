@@ -12,6 +12,7 @@ export interface TemplateCategory {
   name: string;
   description: string;
   price: number;
+  priceId: string;
   icon: React.ComponentType<any>;
   templates: Template[];
 }
@@ -23,6 +24,7 @@ export const templateCategories: TemplateCategory[] = [
     name: '初回メッセージ',
     description: 'Tinder・タップル用の返信率が高い初回メッセージ30種類',
     price: 980,
+    priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14',
     icon: MessageCircle,
     templates: [
       {
@@ -183,6 +185,7 @@ export const templateCategories: TemplateCategory[] = [
     name: 'LINE移行',
     description: 'アプリからLINEへの自然な移行メッセージ30種類',
     price: 980,
+    priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 既存のprice IDを使用
     icon: Heart,
     templates: [
       {
@@ -343,6 +346,7 @@ export const templateCategories: TemplateCategory[] = [
     name: 'デート誘い',
     description: '自然で断られにくいデート誘いメッセージ30種類',
     price: 980,
+    priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
     icon: Coffee,
     templates: [
       {
@@ -503,6 +507,7 @@ export const templateCategories: TemplateCategory[] = [
     name: '会話ネタ',
     description: '会話が続く話題と質問30種類',
     price: 980,
+    priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
     icon: Star,
     templates: [
       {
@@ -655,31 +660,6 @@ export const templateCategories: TemplateCategory[] = [
         id: 'topic_30',
         content: 'お気に入りの食べ物や料理はありますか？',
         category: 'conversation_topics_pack',
-      }
-    ]
-  },
-  {
-    id: 'premium_pack',
-    name: 'プレミアム',
-    description: 'プレミアムユーザー専用の高品質テンプレート',
-    price: 0,
-    icon: Crown,
-    templates: [
-      {
-        id: 'premium_1',
-        content: 'プレミアムテンプレート1: 高度な文脈理解を活用した自然な会話',
-        category: 'premium_pack',
-        isPreview: true
-      },
-      {
-        id: 'premium_2',
-        content: 'プレミアムテンプレート2: 相手の興味に合わせた最適化されたメッセージ',
-        category: 'premium_pack',
-      },
-      {
-        id: 'premium_3',
-        content: 'プレミアムテンプレート3: 関係性の段階に応じた適切なアプローチ',
-        category: 'premium_pack',
       }
     ]
   }
