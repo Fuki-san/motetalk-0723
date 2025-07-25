@@ -293,6 +293,7 @@ const Templates = () => {
                       <div className="text-right">
                         <div className="text-3xl font-bold text-purple-600">¥{selectedCategoryData.price.toLocaleString()}</div>
                         <button
+                          data-testid="purchase-button"
                           onClick={() => handlePurchase(selectedCategoryData.id)}
                           className="mt-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
                         >

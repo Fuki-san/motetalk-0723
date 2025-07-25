@@ -4,29 +4,32 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
   build: {
+    // バンドルサイズ最適化
     rollupOptions: {
       output: {
-        format: 'es',
-        entryFileNames: '[name]-[hash].js',
-        chunkFileNames: '[name]-[hash].js',
-        assetFileNames: '[name]-[hash].[ext]',
+        manualChunks: {
+          // ベンダーライブラリを分離
+          vendor: ['react', 'react-dom'],
+          // UIライブラリを分離
+          ui: ['lucide-react'],
+          // 外部サービスを分離
+          services: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+        },
       },
     },
-    outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: false,
+    // チャンクサイズ警告の閾値
+    chunkSizeWarningLimit: 1000,
+    // ソースマップ（本番環境では無効）
+    sourcemap: process.env.NODE_ENV !== 'production',
   },
+  // 開発サーバー設定
+  server: {
+    port: 3001,
+    host: true,
+  },
+  // 依存関係の最適化
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['react', 'react-dom', 'lucide-react'],
   },
 });

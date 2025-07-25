@@ -38,9 +38,10 @@ export const getTemplateIdFromPriceId = (priceId: string): string | null => {
 export const removeDuplicatePurchases = <T extends { stripeSessionId?: string; id: string }>(
   purchases: T[]
 ): T[] => {
-  return purchases.filter((purchase, index, self) => 
-    index === self.findIndex(p => p.stripeSessionId === purchase.stripeSessionId)
-  );
+  return purchases.filter((purchase, index, self) => {
+    const currentKey = purchase.stripeSessionId || purchase.id;
+    return index === self.findIndex(p => (p.stripeSessionId || p.id) === currentKey);
+  });
 };
 
 /**

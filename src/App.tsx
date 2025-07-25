@@ -6,8 +6,14 @@ import Templates from './components/Templates';
 import Pricing from './components/Pricing';
 import MyPage from './components/MyPage';
 import AuthModal from './components/AuthModal';
+import { SentryErrorBoundary, initSentry } from './config/sentry';
 
 function App() {
+  // Sentry初期化
+  React.useEffect(() => {
+    initSentry();
+  }, []);
+
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -102,9 +108,10 @@ function App() {
   const navigationItems = getNavigationItems();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+    <SentryErrorBoundary fallback={<ErrorFallback />}>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        {/* Header */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -236,6 +243,31 @@ function App() {
           onLogin={handleLogin}
         />
       )}
+      </div>
+    </SentryErrorBoundary>
+  );
+}
+
+// エラー時のフォールバックコンポーネント
+function ErrorFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-white text-2xl">⚠️</span>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">エラーが発生しました</h2>
+        <p className="text-gray-600 mb-6">
+          申し訳ございません。予期しないエラーが発生しました。
+          ページを再読み込みしてお試しください。
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+        >
+          ページを再読み込み
+        </button>
+      </div>
     </div>
   );
 }
