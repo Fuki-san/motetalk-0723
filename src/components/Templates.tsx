@@ -76,21 +76,22 @@ const Templates = () => {
   //   return () => window.removeEventListener('focus', handleFocus);
   // }, [user]);
 
-  // const loadTemplatePurchaseStatus = async () => {
-  //   if (!user) return;
+  // 購入状況を更新する関数（削除せずに残す）
+  const loadTemplatePurchaseStatus = async () => {
+    if (!user) return;
 
-  //   try {
-  //     const status = await checkTemplatePurchaseStatus();
-  //     setPurchasedTemplates(status.purchasedTemplates || []);
-  //     setIsPremiumUser(status.isPremiumUser || false);
-  //     console.log('🔄 テンプレート購入状況を更新:', {
-  //       purchasedTemplates: status.purchasedTemplates?.length || 0,
-  //       isPremiumUser: status.isPremiumUser
-  //     });
-  //   } catch (error) {
-  //     console.error('テンプレート購入状況の更新に失敗:', error);
-  //   }
-  // };
+    try {
+      const status = await checkTemplatePurchaseStatus();
+      setPurchasedTemplates(status.purchasedTemplates || []);
+      setIsPremiumUser(status.isPremiumUser || false);
+      console.log('🔄 テンプレート購入状況を更新:', {
+        purchasedTemplates: status.purchasedTemplates?.length || 0,
+        isPremiumUser: status.isPremiumUser
+      });
+    } catch (error) {
+      console.error('テンプレート購入状況の更新に失敗:', error);
+    }
+  };
 
   // テンプレート購入処理
   const handlePurchase = async (categoryId: string) => {
