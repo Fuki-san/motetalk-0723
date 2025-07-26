@@ -114,9 +114,22 @@ console.log('🔍 環境変数チェック:', {
   FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? '✅ 設定済み' : '❌ 未設定',
   FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? '✅ 設定済み' : '❌ 未設定',
   FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ? '✅ 設定済み' : '❌ 未設定',
+  VITE_SENTRY_DSN: process.env.VITE_SENTRY_DSN ? '✅ 設定済み' : '❌ 未設定',
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: process.env.PORT || 3001
 });
+
+// Sentry環境変数の詳細確認
+if (process.env.VITE_SENTRY_DSN) {
+  console.log('🔍 Sentry DSN設定確認:', {
+    hasValue: !!process.env.VITE_SENTRY_DSN,
+    length: process.env.VITE_SENTRY_DSN.length,
+    startsWithHttps: process.env.VITE_SENTRY_DSN.startsWith('https://'),
+    containsIngest: process.env.VITE_SENTRY_DSN.includes('ingest')
+  });
+} else {
+  console.warn('⚠️ VITE_SENTRY_DSNが設定されていません');
+}
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.error('❌ STRIPE_SECRET_KEY が設定されていません！');
