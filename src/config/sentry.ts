@@ -37,18 +37,18 @@ export const initSentry = () => {
 // エラー境界コンポーネント
 export const SentryErrorBoundary = Sentry.ErrorBoundary;
 
-// パフォーマンス監視（簡素化）
-export const startTransaction = (name: string, operation: string) => {
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      return Sentry.startTransaction({
-        name,
-        op: operation,
-      });
-    } catch (error) {
-      console.warn('Sentry transaction error:', error);
-      return null;
-    }
-  }
-  return null;
-}; 
+// パフォーマンス監視（削除 - インポートエラーの原因）
+// export const startTransaction = (name: string, operation: string) => {
+//   if (process.env.NODE_ENV === 'production') {
+//     try {
+//       return Sentry.startTransaction({
+//         name,
+//         op: operation,
+//       });
+//     } catch (error) {
+//       console.warn('Sentry transaction error:', error);
+//       return null;
+//     }
+//   }
+//   return null;
+// }; 
