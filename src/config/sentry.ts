@@ -11,39 +11,44 @@ export const initSentry = () => {
       return;
     }
 
-    Sentry.init({
-      dsn: dsn,
-      environment: process.env.NODE_ENV,
-      tracesSampleRate: 0.1, // 10%のリクエストをトレース
-      integrations: [
-        new Sentry.BrowserTracing({
-          tracePropagationTargets: ["localhost", "motetalk.com"],
-        }),
-      ],
-      // エラーの前処理
-      beforeSend(event) {
-        // 機密情報を除外
-        if (event.request?.headers) {
-          delete event.request.headers['authorization'];
-        }
-        return event;
-      },
-    });
-    
-    console.log('✅ Sentry監視が有効になりました');
+    try {
+      Sentry.init({
+        dsn: dsn,
+        environment: process.env.NODE_ENV,
+        tracesSampleRate: 0.1, // 10%のリクエストをトレース
+        // BrowserTracingは削除（エラーの原因）
+        // エラーの前処理
+        beforeSend(event) {
+          // 機密情報を除外
+          if (event.request?.headers) {
+            delete event.request.headers['authorization'];
+          }
+          return event;
+        },
+      });
+      
+      console.log('✅ Sentry監視が有効になりました');
+    } catch (error) {
+      console.error('❌ Sentry初期化エラー:', error);
+    }
   }
 };
 
 // エラー境界コンポーネント
 export const SentryErrorBoundary = Sentry.ErrorBoundary;
 
-// パフォーマンス監視
+// パフォーマンス監視（簡素化）
 export const startTransaction = (name: string, operation: string) => {
   if (process.env.NODE_ENV === 'production') {
-    return Sentry.startTransaction({
-      name,
-      op: operation,
-    });
+    try {
+      return Sentry.startTransaction({
+        name,
+        op: operation,
+      });
+    } catch (error) {
+      console.warn('Sentry transaction error:', error);
+      return null;
+    }
   }
   return null;
 }; 
