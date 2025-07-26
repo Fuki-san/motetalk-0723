@@ -24,7 +24,7 @@ const Templates = () => {
     }
   }, []);
 
-  // 購入済みテンプレートの状態を動的に取得（重複を防ぎつつ、userProfileの変更も検知）
+  // 購入済みテンプレートの状態を動的に取得（元の動作に戻して502エラーを解消）
   useEffect(() => {
     const loadTemplatePurchaseStatus = async () => {
       if (!user) {
@@ -62,20 +62,7 @@ const Templates = () => {
     };
 
     loadTemplatePurchaseStatus();
-  }, [user]); // userProfileを依存配列から削除（2回読み込み防止）
-
-  // userProfileの変更を検知して購入状況を更新（API呼び出しなしで状態のみ更新）
-  useEffect(() => {
-    if (user && userProfile && !loading) {
-      // userProfileが変更された場合、購入状況を更新
-      setPurchasedTemplates(userProfile.purchasedTemplates || []);
-      setIsPremiumUser(userProfile.plan === 'premium');
-      console.log('🔄 userProfile変更を検知、購入状況を更新:', {
-        purchasedTemplates: userProfile.purchasedTemplates?.length || 0,
-        plan: userProfile.plan
-      });
-    }
-  }, [userProfile?.purchasedTemplates, userProfile?.plan, user, loading]); // 必要な依存関係を追加
+  }, [user, userProfile]); // 元の依存関係に戻す
 
   // ページフォーカス時の重複処理を削除（2回読み込みの原因）
   // useEffect(() => {
