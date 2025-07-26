@@ -64,33 +64,33 @@ const Templates = () => {
     loadTemplatePurchaseStatus();
   }, [user, userProfile]);
 
-  // ページフォーカス時に購入状況を再取得
-  useEffect(() => {
-    const handleFocus = () => {
-      if (user) {
-        loadTemplatePurchaseStatus();
-      }
-    };
+  // ページフォーカス時の重複処理を削除（2回読み込みの原因）
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     if (user) {
+  //       loadTemplatePurchaseStatus();
+  //     }
+  //   };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user]);
+  //   window.addEventListener('focus', handleFocus);
+  //   return () => window.removeEventListener('focus', handleFocus);
+  // }, [user]);
 
-  const loadTemplatePurchaseStatus = async () => {
-    if (!user) return;
+  // const loadTemplatePurchaseStatus = async () => {
+  //   if (!user) return;
 
-    try {
-      const status = await checkTemplatePurchaseStatus();
-      setPurchasedTemplates(status.purchasedTemplates || []);
-      setIsPremiumUser(status.isPremiumUser || false);
-      console.log('🔄 テンプレート購入状況を更新:', {
-        purchasedTemplates: status.purchasedTemplates?.length || 0,
-        isPremiumUser: status.isPremiumUser
-      });
-    } catch (error) {
-      console.error('テンプレート購入状況の更新に失敗:', error);
-    }
-  };
+  //   try {
+  //     const status = await checkTemplatePurchaseStatus();
+  //     setPurchasedTemplates(status.purchasedTemplates || []);
+  //     setIsPremiumUser(status.isPremiumUser || false);
+  //     console.log('🔄 テンプレート購入状況を更新:', {
+  //       purchasedTemplates: status.purchasedTemplates?.length || 0,
+  //       isPremiumUser: status.isPremiumUser
+  //     });
+  //   } catch (error) {
+  //     console.error('テンプレート購入状況の更新に失敗:', error);
+  //   }
+  // };
 
   // テンプレート購入処理
   const handlePurchase = async (categoryId: string) => {
