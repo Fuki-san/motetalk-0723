@@ -384,18 +384,15 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                         return (
                           <div key={purchase.id} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="font-medium text-gray-800">
-                                  {templateInfo ? templateInfo.name : purchase.templateName}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {templateInfo ? `${templateInfo.name}` : 'テンプレートパック'}
-                                </p>
-                                <p className="text-sm text-gray-600">¥{purchase.amount.toLocaleString()}</p>
-                                <p className="text-xs text-gray-500">
-                                  {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'}
-                                </p>
-                              </div>
+                                                          <div>
+                              <h4 className="font-medium text-gray-800">
+                                {templateInfo ? templateInfo.name : purchase.templateName}
+                              </h4>
+                              <p className="text-sm text-gray-600">¥{purchase.amount.toLocaleString()}</p>
+                              <p className="text-xs text-gray-500">
+                                {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString('ja-JP') : '購入日不明'}
+                              </p>
+                            </div>
                               <Check className="w-5 h-5 text-green-500" />
                             </div>
                           </div>

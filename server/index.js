@@ -333,16 +333,20 @@ app.use((req, res, next) => {
 });
 
 // Stripe Checkout Session作成
-app.post('/api/create-checkout-session', async (req, res) => {
+app.post('/api/create-checkout-session', authenticateUser, requireAuth, async (req, res) => {
   try {
     console.log('🛒 Checkout session作成リクエスト:', req.body);
     
     const { type, planId, templateId, priceId, successUrl, cancelUrl } = req.body;
+    const userId = req.user.uid;
 
     let sessionConfig = {
       payment_method_types: ['card'],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata: {
+        userId: userId
+      }
     };
 
     if (type === 'subscription') {
@@ -1915,7 +1919,8 @@ app.post('/webhook', async (req, res) => {
     url: req.url,
     signature: sig ? '✅ あり' : '❌ なし',
     secret: endpointSecret ? '✅ 設定済み' : '❌ 未設定',
-    bodyLength: req.body.length,
+    bodyLength: req.body ? req.body.length : 'undefined',
+    bodyType: typeof req.body,
     headers: Object.keys(req.headers)
   });
 
@@ -2001,22 +2006,14 @@ async function savePurchaseToDatabase(session) {
       return;
     }
 
-    const customerEmail = session.customer_details?.email;
-    if (!customerEmail) {
-      console.error('❌ カスタマー情報が見つかりません');
+    // メタデータからユーザーIDを取得
+    const userId = session.metadata?.userId;
+    if (!userId) {
+      console.error('❌ セッションメタデータにユーザーIDが見つかりません');
       return;
     }
 
-    // ユーザーを特定
-    const usersQuery = await db.collection('users').where('email', '==', customerEmail).get();
-    let userId = null;
-    
-    if (!usersQuery.empty) {
-      userId = usersQuery.docs[0].id;
-    } else {
-      console.error('❌ ユーザーが見つかりません:', customerEmail);
-      return;
-    }
+    console.log('✅ メタデータからユーザーIDを取得:', userId);
 
     // セッションからテンプレートIDを取得
     let templateId = null;
@@ -2038,6 +2035,9 @@ async function savePurchaseToDatabase(session) {
       }
     }
 
+    // セッションからメールアドレスを取得
+    const customerEmail = session.customer_details?.email;
+    
     const purchaseData = {
       userId: userId,
       stripeSessionId: session.id,
@@ -2242,11 +2242,14 @@ async function updateUserPurchasedTemplates(session) {
       return;
     }
 
-    const customerEmail = session.customer_details?.email;
-    if (!customerEmail) {
-      console.error('❌ カスタマー情報が見つかりません');
+    // メタデータからユーザーIDを取得
+    const userId = session.metadata?.userId;
+    if (!userId) {
+      console.error('❌ セッションメタデータにユーザーIDが見つかりません');
       return;
     }
+
+    console.log('✅ メタデータからユーザーIDを取得:', userId);
 
     // セッションの商品情報からテンプレートIDを特定（priceIdベース）
     const lineItems = session.line_items?.data || [];
@@ -2270,11 +2273,10 @@ async function updateUserPurchasedTemplates(session) {
       return;
     }
 
-    // ユーザーを特定してテンプレート購入情報を更新
-    const usersQuery = await db.collection('users').where('email', '==', customerEmail).get();
+    // ユーザーIDで直接ユーザードキュメントを取得
+    const userDoc = await db.collection('users').doc(userId).get();
     
-    if (!usersQuery.empty) {
-      const userDoc = usersQuery.docs[0];
+    if (userDoc.exists) {
       const userData = userDoc.data();
       const purchasedTemplates = userData.purchasedTemplates || [];
       
@@ -2287,22 +2289,25 @@ async function updateUserPurchasedTemplates(session) {
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         
-        console.log('✅ ユーザーの購入済みテンプレートリストを更新:', templateId, 'for user:', customerEmail);
+        console.log('✅ ユーザーの購入済みテンプレートリストを更新:', templateId, 'for user:', userId);
         
-        // 購入完了通知メール
-        const emailTemplate = generateEmailTemplate('template_purchased', {
-          name: userData.name || customerEmail,
-          templateName: getTemplateDisplayName(templateId)
-        });
-        
-        if (emailTemplate) {
-          await sendEmail(customerEmail, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+        // 購入完了通知メール（メールアドレスがある場合のみ）
+        const customerEmail = session.customer_details?.email;
+        if (customerEmail) {
+          const emailTemplate = generateEmailTemplate('template_purchased', {
+            name: userData.name || customerEmail,
+            templateName: getTemplateDisplayName(templateId)
+          });
+          
+          if (emailTemplate) {
+            await sendEmail(customerEmail, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+          }
         }
       } else {
         console.log('ℹ️ テンプレートは既に購入済み:', templateId);
       }
     } else {
-      console.error('❌ ユーザーが見つかりません:', customerEmail);
+      console.error('❌ ユーザーが見つかりません:', userId);
     }
   } catch (error) {
     console.error('❌ テンプレート購入処理エラー:', error);

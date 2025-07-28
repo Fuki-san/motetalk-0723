@@ -72,13 +72,7 @@ export const templatePacks: TemplatePack[] = [
     price: 2500,
     features: ['返信率UP実績あり', 'アプリ別最適化', '即使える例文']
   },
-  {
-    id: 'line_transition_pack',
-    name: 'LINE移行テンプレ',
-    description: 'アプリ→LINE自然移行例30種類',
-    price: 2500,
-    features: ['自然な流れ', '断られにくい文面', '成功率80%以上']
-  },
+
   {
     id: 'date_invitation_pack',
     name: '誘い文句大全',
@@ -110,11 +104,15 @@ export const createCheckoutSession = async (
   });
 
   try {
+    // 認証トークンを取得
+    const authToken = await getAuthToken();
+    
     // 実際の実装では、バックエンドAPIを呼び出す
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
       },
       body: JSON.stringify(request),
     });

@@ -618,4 +618,149 @@ const Templates = lazy(() => import('./components/Templates'));
 **結果:**
 - ✅ 環境変数が正しく置換される
 - ✅ Sentryの警告が解消
-- ✅ コンソールログの重複を解消 
+- ✅ コンソールログの重複を解消
+
+### Templatesコンポーネントの最適化 ✅
+
+**問題:**
+- テンプレートページで冗長なコンソールログが出力される
+- 同じ処理が複数回実行されている
+- パフォーマンスの低下
+
+**原因:**
+- `getDisplayTemplates()`が毎回のレンダリングで実行されている
+- 重複するuseEffectが存在
+- Reactの最適化（useMemo、useCallback）が不足
+- 開発環境でのみ必要なログが本番環境でも出力されている
+
+**解決:**
+1. **`getDisplayTemplates()`を`useMemo`でメモ化**
+   - 依存関係が変更された時のみ再計算
+   - 不要な再レンダリングを防止
+
+2. **重複するuseEffectを統合**
+   - 購入状況取得とページフォーカス処理を1つのuseEffectに統合
+   - `loadTemplatePurchaseStatus`関数の重複を解消
+
+3. **イベントハンドラーを`useCallback`でメモ化**
+   - `handlePurchase`、`handleCopyTemplate`、`handleViewModeChange`、`handleCategorySelect`
+   - 不要な再レンダリングを防止
+
+4. **コンソールログを開発環境でのみ出力**
+   - `import.meta.env.DEV`で条件分岐
+   - 本番環境でのログ出力を削減
+
+**修正箇所:**
+- `src/components/Templates.tsx` - 全体的な最適化
+- `useMemo`、`useCallback`の追加
+- コンソールログの条件分岐
+
+**結果:**
+- ✅ 冗長なコンソールログを解消
+- ✅ パフォーマンスが向上
+- ✅ 不要な再レンダリングを防止
+- ✅ 開発環境と本番環境のログ出力を適切に分離
+
+### Templatesコンポーネントの購入反映問題修正 ✅
+
+**問題:**
+- テンプレート購入後に購入済みテンプレートに反映されない
+- 購入履歴が更新されない
+
+**原因:**
+- 最適化の過程で`loadTemplatePurchaseStatus`関数の依存関係に問題が発生
+- `handlePurchase`の`useCallback`で`loadTemplatePurchaseStatus`が毎回新しい関数として認識される
+- 購入後にユーザーデータの更新が行われていない
+
+**解決:**
+1. **`loadTemplatePurchaseStatus`を`useCallback`でメモ化**
+   - 関数の安定性を確保
+   - 依存関係を明確化
+
+2. **購入後にユーザーデータも更新**
+   - `refreshUserData()`を呼び出し
+   - 購入状況とユーザーデータの同期を確保
+
+3. **依存関係の修正**
+   - `handlePurchase`の依存関係を適切に設定
+   - `useEffect`の依存関係を修正
+
+**修正箇所:**
+- `src/components/Templates.tsx` - `loadTemplatePurchaseStatus`を`useCallback`でメモ化
+- `handlePurchase`に`refreshUserData`を追加
+- 依存関係の適切な設定
+
+**結果:**
+- ✅ 購入後に購入済みテンプレートが正しく反映
+- ✅ 購入履歴が正常に更新
+- ✅ ユーザーデータと購入状況の同期が確保
+
+### Templatesコンポーネントの購入反映問題追加修正 ✅
+
+**問題:**
+- 前回の修正後も購入反映が不完全
+- 購入後に即座に状態が更新されない
+
+**原因:**
+- `handlePurchase`の`useCallback`の依存関係で循環参照が発生
+- 購入後の状態更新が非同期処理に依存しすぎている
+- `userProfile`の更新タイミングが遅い
+
+**解決:**
+1. **購入後に即座に状態を更新**
+   - `setPurchasedTemplates`で即座に購入済みリストに追加
+   - 非同期処理の完了を待たずにUIを更新
+
+2. **依存関係の循環参照を解消**
+   - `handlePurchase`から`loadTemplatePurchaseStatus`の依存関係を削除
+   - 関数の安定性を確保
+
+3. **追加のuseEffectで確実な状態更新**
+   - `userProfile?.purchasedTemplates`の変更を監視
+   - 購入後に確実に状態を同期
+
+**修正箇所:**
+- `src/components/Templates.tsx` - `handlePurchase`の即座状態更新
+- 依存関係の最適化
+- 追加の`useEffect`で状態監視
+
+**結果:**
+- ✅ 購入後に即座にUIが更新
+- ✅ 循環参照による問題を解消
+- ✅ 確実な状態同期を実現 
+
+### Templatesコンポーネントの購入反映問題詳細デバッグ修正 ✅
+
+**問題:**
+- 購入後に購入済みテンプレートが反映されない
+- 購入履歴が更新されない
+- 状態更新のタイミングが不明
+
+**原因:**
+- 購入処理の非同期タイミングが不適切
+- 状態更新のログが不足で問題の特定が困難
+- Webhook処理とフロントエンドの状態更新の同期が不完全
+
+**解決:**
+1. **詳細なデバッグログを追加**
+   - 購入処理の各段階でログを出力
+   - 状態更新の前後でログを出力
+   - APIレスポンスの詳細をログ出力
+
+2. **購入処理のタイミングを調整**
+   - 購入後に1秒待機してから状態を再取得
+   - 即座の状態更新と非同期更新の両方を実装
+
+3. **状態監視の強化**
+   - `purchasedTemplates`の変更を監視
+   - `userProfile`の変更を詳細にログ出力
+
+**修正箇所:**
+- `src/components/Templates.tsx` - 詳細なデバッグログ追加
+- 購入処理のタイミング調整
+- 状態監視の強化
+
+**結果:**
+- ✅ 購入処理の詳細なログが出力
+- ✅ 状態更新のタイミングが明確
+- ✅ 問題の特定が容易 

@@ -181,167 +181,6 @@ export const templateCategories: TemplateCategory[] = [
     ]
   },
   {
-    id: 'line_transition_pack',
-    name: 'LINE移行',
-    description: 'アプリからLINEへの自然な移行メッセージ30種類',
-    price: 2500,
-    priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14', // 既存のprice IDを使用
-    icon: Heart,
-    templates: [
-      {
-        id: 'line_1',
-        content: 'お話しできて楽しかったです！もしよろしければ、LINEでもお話しできませんか？ID: [LINE_ID]',
-        category: 'line_transition_pack',
-        isPreview: true
-      },
-      {
-        id: 'line_2',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_3',
-        content: 'お話しできて嬉しかったです。LINEでもお話しできればと思います。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_4',
-        content: '楽しいお話でした！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_5',
-        content: 'お話しできて良かったです。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_6',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_7',
-        content: 'お話しできて楽しかったです！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_8',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_9',
-        content: 'お話しできて嬉しかったです。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_10',
-        content: '楽しいお話でした！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_11',
-        content: 'お話しできて良かったです。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_12',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_13',
-        content: 'お話しできて楽しかったです！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_14',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_15',
-        content: 'お話しできて嬉しかったです。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_16',
-        content: '楽しいお話でした！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_17',
-        content: 'お話しできて良かったです。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_18',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_19',
-        content: 'お話しできて楽しかったです！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_20',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_21',
-        content: 'お話しできて嬉しかったです。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_22',
-        content: '楽しいお話でした！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_23',
-        content: 'お話しできて良かったです。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_24',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_25',
-        content: 'お話しできて楽しかったです！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_26',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_27',
-        content: 'お話しできて嬉しかったです。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_28',
-        content: '楽しいお話でした！LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_29',
-        content: 'お話しできて良かったです。LINEでも続きを聞かせてください！ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      },
-      {
-        id: 'line_30',
-        content: 'とても興味深いお話でした。LINEでも続きを聞かせてください。ID: [LINE_ID]',
-        category: 'line_transition_pack',
-      }
-    ]
-  },
-  {
     id: 'date_invitation_pack',
     name: 'デート誘い',
     description: '自然で断られにくいデート誘いメッセージ30種類',
@@ -505,162 +344,186 @@ export const templateCategories: TemplateCategory[] = [
   {
     id: 'conversation_topics_pack',
     name: '会話ネタ',
-    description: '会話が続く話題と質問30種類',
+    description: '会話が続く話題とボケ例30種類',
     price: 2500,
-    priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
+    priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
     icon: Star,
     templates: [
       {
-        id: 'topic_1',
-        content: '最近何か新しいことに挑戦されましたか？',
+        id: 'conversation_1',
+        content: '最近何か面白いことがありましたか？僕は[具体的な体験]があって、とても楽しかったです。',
         category: 'conversation_topics_pack',
         isPreview: true
       },
       {
-        id: 'topic_2',
-        content: '休日はどんなことをして過ごされることが多いですか？',
+        id: 'conversation_2',
+        content: '[趣味]について詳しく教えてください！とても興味があります。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_3',
-        content: 'お気に入りの映画やドラマはありますか？',
+        id: 'conversation_3',
+        content: '最近見た映画やドラマで印象に残ったものはありますか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_4',
-        content: '最近読んだ本で印象に残っているものはありますか？',
+        id: 'conversation_4',
+        content: '[場所]に行ったことがありますか？とても素敵な場所だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_5',
-        content: '旅行で行ってみたい場所はありますか？',
+        id: 'conversation_5',
+        content: '最近何か新しいことに挑戦しましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_6',
-        content: 'お気に入りの食べ物や料理はありますか？',
+        id: 'conversation_6',
+        content: '[食べ物]は好きですか？僕も大好きです。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_7',
-        content: '最近何か新しいことに挑戦されましたか？',
+        id: 'conversation_7',
+        content: '最近読んだ本で印象に残ったものはありますか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_8',
-        content: '休日はどんなことをして過ごされることが多いですか？',
+        id: 'conversation_8',
+        content: '[音楽]は好きですか？とても良い曲だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_9',
-        content: 'お気に入りの映画やドラマはありますか？',
+        id: 'conversation_9',
+        content: '最近何か楽しいことがありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_10',
-        content: '最近読んだ本で印象に残っているものはありますか？',
+        id: 'conversation_10',
+        content: '[スポーツ]は好きですか？とても楽しいスポーツだと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_11',
-        content: '旅行で行ってみたい場所はありますか？',
+        id: 'conversation_11',
+        content: '最近何か新しい発見がありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_12',
-        content: 'お気に入りの食べ物や料理はありますか？',
+        id: 'conversation_12',
+        content: '[アート]は好きですか？とても美しいと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_13',
-        content: '最近何か新しいことに挑戦されましたか？',
+        id: 'conversation_13',
+        content: '最近何か感動したことがありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_14',
-        content: '休日はどんなことをして過ごされることが多いですか？',
+        id: 'conversation_14',
+        content: '[旅行]は好きですか？とても楽しい体験だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_15',
-        content: 'お気に入りの映画やドラマはありますか？',
+        id: 'conversation_15',
+        content: '最近何か新しいことに気づきましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_16',
-        content: '最近読んだ本で印象に残っているものはありますか？',
+        id: 'conversation_16',
+        content: '[料理]は好きですか？とても美味しそうだと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_17',
-        content: '旅行で行ってみたい場所はありますか？',
+        id: 'conversation_17',
+        content: '最近何か新しい発見がありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_18',
-        content: 'お気に入りの食べ物や料理はありますか？',
+        id: 'conversation_18',
+        content: '[ファッション]は好きですか？とても素敵だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_19',
-        content: '最近何か新しいことに挑戦されましたか？',
+        id: 'conversation_19',
+        content: '最近何か楽しいことがありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_20',
-        content: '休日はどんなことをして過ごされることが多いですか？',
+        id: 'conversation_20',
+        content: '[ゲーム]は好きですか？とても楽しいゲームだと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_21',
-        content: 'お気に入りの映画やドラマはありますか？',
+        id: 'conversation_21',
+        content: '最近何か新しいことに挑戦しましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_22',
-        content: '最近読んだ本で印象に残っているものはありますか？',
+        id: 'conversation_22',
+        content: '[写真]は好きですか？とても美しい写真だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_23',
-        content: '旅行で行ってみたい場所はありますか？',
+        id: 'conversation_23',
+        content: '最近何か感動したことがありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_24',
-        content: 'お気に入りの食べ物や料理はありますか？',
+        id: 'conversation_24',
+        content: '[ダンス]は好きですか？とても楽しいダンスだと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_25',
-        content: '最近何か新しいことに挑戦されましたか？',
+        id: 'conversation_25',
+        content: '最近何か新しい発見がありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_26',
-        content: '休日はどんなことをして過ごされることが多いですか？',
+        id: 'conversation_26',
+        content: '[ヨガ]は好きですか？とても健康的な運動だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_27',
-        content: 'お気に入りの映画やドラマはありますか？',
+        id: 'conversation_27',
+        content: '最近何か楽しいことがありましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_28',
-        content: '最近読んだ本で印象に残っているものはありますか？',
+        id: 'conversation_28',
+        content: '[ランニング]は好きですか？とても健康的な運動だと思います。',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_29',
-        content: '旅行で行ってみたい場所はありますか？',
+        id: 'conversation_29',
+        content: '最近何か新しいことに気づきましたか？',
         category: 'conversation_topics_pack',
       },
       {
-        id: 'topic_30',
-        content: 'お気に入りの食べ物や料理はありますか？',
+        id: 'conversation_30',
+        content: '[瞑想]は好きですか？とてもリラックスできると思います。',
         category: 'conversation_topics_pack',
       }
     ]
   }
-]; 
+];
+
+// テンプレート表示名を取得する関数
+export const getTemplateDisplayName = (templateId: string): string => {
+  const template = templateCategories.find(t => t.id === templateId);
+  return template ? template.name : 'Unknown Template';
+};
+
+// テンプレート価格を取得する関数
+export const getTemplatePrice = (templateId: string): number => {
+  const template = templateCategories.find(t => t.id === templateId);
+  return template ? template.price : 0;
+};
+
+// テンプレート説明を取得する関数
+export const getTemplateDescription = (templateId: string): string => {
+  const template = templateCategories.find(t => t.id === templateId);
+  return template ? template.description : '';
+};
+
+// テンプレートアイコンを取得する関数
+export const getTemplateIcon = (templateId: string): React.ComponentType<any> => {
+  const template = templateCategories.find(t => t.id === templateId);
+  return template ? template.icon : MessageCircle;
+}; 
