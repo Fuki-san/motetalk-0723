@@ -184,3 +184,72 @@ Node.jsバージョンが古いため、新しいcrypto APIに対応していな
 
 ### 修正日
 2025-07-28 
+
+## 本番環境特有の問題
+
+### 問題
+- ローカル環境では正常に動作するが、本番環境（Render）で502 Bad Gatewayエラーが発生
+- 静的ファイルが正しく配信されない
+
+### 原因
+1. **Viteのビルド出力構造の違い**
+   - 開発環境: Vite開発サーバーが静的ファイルを配信
+   - 本番環境: Expressサーバーが静的ファイルを配信
+   - ルートパスのファイル（`index-*.js`, `index-*.css`）が配信されない
+
+2. **環境変数アクセスの違い**
+   - 開発環境: `process.env`が動作
+   - 本番環境: クライアントサイドでは`import.meta.env`が必要
+
+3. **Webhook認証の厳密性**
+   - 開発環境: 緩い設定で動作
+   - 本番環境: 厳密な署名検証が必要
+
+### 解決策
+
+#### 1. 静的ファイル配信の修正
+```javascript
+// ルートパスのJSファイルの配信（index-*.js）
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.js/)) {
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+
+// ルートパスのCSSファイルの配信（index-*.css）
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.css/)) {
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+```
+
+#### 2. 環境変数アクセスの修正
+```typescript
+// 修正前
+process.env.VITE_SENTRY_DSN
+
+// 修正後
+import.meta.env.VITE_SENTRY_DSN
+```
+
+#### 3. Webhook認証の設定
+```bash
+# Renderダッシュボードで環境変数を設定
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+```
+
+### 修正日
+2025-07-28
+
+### 確認方法
+1. **静的ファイル配信**: ブラウザの開発者ツールでJS/CSSファイルが正常に読み込まれているか確認
+2. **環境変数**: ビルド後のファイルで環境変数が正しく置換されているか確認
+3. **Webhook**: サーバーログでWebhookが正常に受信されているか確認
+
+### 予防策
+- 本番環境でのテストを定期的に実施
+- Viteの設定変更時は静的ファイル配信の確認
+- 環境変数の設定漏れがないかチェックリストを作成 

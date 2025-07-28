@@ -2102,23 +2102,28 @@ async function handleSubscriptionStart(subscription) {
       return;
     }
 
-    // カスタマー情報からユーザーを特定してプラン更新
-    const customer = await stripe.customers.retrieve(subscription.customer);
+    // メタデータからユーザーIDを取得
+    const userId = subscription.metadata?.userId;
+    if (!userId) {
+      console.error('❌ サブスクリプションメタデータにユーザーIDが見つかりません');
+      return;
+    }
+
+    console.log('✅ メタデータからユーザーIDを取得:', userId);
+
+    // ユーザーIDで直接ユーザードキュメントを取得
+    const userDoc = await db.collection('users').doc(userId).get();
     
-    // customer.emailからユーザーを特定してプラン更新
-    const usersQuery = await db.collection('users').where('email', '==', customer.email).get();
-    
-    if (!usersQuery.empty) {
-      const userDoc = usersQuery.docs[0];
+    if (userDoc.exists) {
       await userDoc.ref.update({
         plan: 'premium',
         subscriptionId: subscription.id,
         subscriptionStatus: 'active',
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
-      console.log('✅ ユーザープランをプレミアムに更新:', customer.email);
+      console.log('✅ ユーザープランをプレミアムに更新:', userId);
     } else {
-      console.error('❌ ユーザーが見つかりません:', customer.email);
+      console.error('❌ ユーザーが見つかりません:', userId);
     }
   } catch (error) {
     console.error('❌ サブスクリプション開始処理エラー:', error);
@@ -2132,13 +2137,19 @@ async function handleSubscriptionEnd(subscription) {
       return;
     }
 
-    const customer = await stripe.customers.retrieve(subscription.customer);
+    // メタデータからユーザーIDを取得
+    const userId = subscription.metadata?.userId;
+    if (!userId) {
+      console.error('❌ サブスクリプションメタデータにユーザーIDが見つかりません');
+      return;
+    }
+
+    console.log('✅ メタデータからユーザーIDを取得:', userId);
+
+    // ユーザーIDで直接ユーザードキュメントを取得
+    const userDoc = await db.collection('users').doc(userId).get();
     
-    // customer.emailからユーザーを特定してプラン更新
-    const usersQuery = await db.collection('users').where('email', '==', customer.email).get();
-    
-    if (!usersQuery.empty) {
-      const userDoc = usersQuery.docs[0];
+    if (userDoc.exists) {
       const userData = userDoc.data();
       
       await userDoc.ref.update({
@@ -2148,19 +2159,22 @@ async function handleSubscriptionEnd(subscription) {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
       
-      console.log('✅ ユーザープランを無料に戻しました:', customer.email);
+      console.log('✅ ユーザープランを無料に戻しました:', userId);
       
-      // サブスクリプション解約通知メール
-      const emailTemplate = generateEmailTemplate('subscription_canceled', {
-        name: userData.name || customer.email,
-        periodEnd: new Date(subscription.current_period_end * 1000).toLocaleDateString('ja-JP')
-      });
-      
-      if (emailTemplate) {
-        await sendEmail(customer.email, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+      // サブスクリプション解約通知メール（メールアドレスがある場合のみ）
+      const customerEmail = userData.email;
+      if (customerEmail) {
+        const emailTemplate = generateEmailTemplate('subscription_canceled', {
+          name: userData.name || customerEmail,
+          periodEnd: new Date(subscription.current_period_end * 1000).toLocaleDateString('ja-JP')
+        });
+        
+        if (emailTemplate) {
+          await sendEmail(customerEmail, emailTemplate.subject, emailTemplate.html, emailTemplate.text);
+        }
       }
     } else {
-      console.error('❌ ユーザーが見つかりません:', customer.email);
+      console.error('❌ ユーザーが見つかりません:', userId);
     }
   } catch (error) {
     console.error('❌ サブスクリプション終了処理エラー:', error);
