@@ -2005,13 +2005,21 @@ app.post('/webhook', async (req, res) => {
         // savePurchaseToDatabaseで既に保存済みのため、ユーザー情報の更新のみ実行
         await updateUserPurchasedTemplates(fullSession);
       }
+      
+      // サブスクリプション購入の場合はユーザーのプランを更新
+      if (fullSession.mode === 'subscription') {
+        console.log('🔄 サブスクリプション購入処理を開始');
+        await handleSubscriptionStart(fullSession);
+      }
       break;
 
     case 'customer.subscription.created':
       const subscription = event.data.object;
       console.log('✅ サブスクリプション開始:', subscription.id);
       
-      await handleSubscriptionStart(subscription);
+      // サブスクリプションオブジェクトにはメタデータがないため、
+      // 対応するcheckout.session.completedイベントで処理済みの場合はスキップ
+      console.log('ℹ️ customer.subscription.createdイベント - メタデータなしのためスキップ');
       break;
 
     case 'customer.subscription.deleted':
@@ -2095,7 +2103,7 @@ async function savePurchaseToDatabase(session) {
   }
 }
 
-async function handleSubscriptionStart(subscription) {
+async function handleSubscriptionStart(session) {
   try {
     if (!db) {
       console.error('❌ Firestore未初期化 - サブスクリプション開始処理をスキップ');
@@ -2103,9 +2111,9 @@ async function handleSubscriptionStart(subscription) {
     }
 
     // メタデータからユーザーIDを取得
-    const userId = subscription.metadata?.userId;
+    const userId = session.metadata?.userId;
     if (!userId) {
-      console.error('❌ サブスクリプションメタデータにユーザーIDが見つかりません');
+      console.error('❌ セッションメタデータにユーザーIDが見つかりません');
       return;
     }
 
@@ -2117,7 +2125,7 @@ async function handleSubscriptionStart(subscription) {
     if (userDoc.exists) {
       await userDoc.ref.update({
         plan: 'premium',
-        subscriptionId: subscription.id,
+        subscriptionId: session.subscription || session.id,
         subscriptionStatus: 'active',
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });

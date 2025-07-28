@@ -83,6 +83,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [isAuthenticated, authUser, refreshUserData]);
 
+  // ユーザープロフィールが更新された時に使用回数も再取得
+  useEffect(() => {
+    if (userProfile && isAuthenticated && authUser) {
+      loadUsageLimit();
+    }
+  }, [userProfile, isAuthenticated, authUser]);
+
   const loadUsageLimit = async () => {
     if (isAuthenticated && authUser) {
       try {
