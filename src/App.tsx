@@ -6,14 +6,9 @@ import Templates from './components/Templates';
 import Pricing from './components/Pricing';
 import MyPage from './components/MyPage';
 import AuthModal from './components/AuthModal';
-import { SentryErrorBoundary, initSentry } from './config/sentry';
+import { SentryErrorBoundary } from './config/sentry';
 
 function App() {
-  // Sentry初期化
-  React.useEffect(() => {
-    initSentry();
-  }, []);
-
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);

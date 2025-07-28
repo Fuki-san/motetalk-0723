@@ -569,4 +569,53 @@ const Templates = lazy(() => import('./components/Templates'));
 **結果:**
 - ✅ アプリケーションが正常に動作
 - ✅ すべての静的ファイルが正常に配信
-- ✅ ユーザー認証、API呼び出しも正常動作 
+- ✅ ユーザー認証、API呼び出しも正常動作
+
+### Sentry設定の修正 ✅
+
+**問題:**
+- `⚠️ VITE_SENTRY_DSNが設定されていません。Sentry監視が無効です。` の警告
+- ビルド時のSentryインポートエラー
+
+**原因:**
+- Sentryの新しいバージョン（@sentry/react@9.42.0）でAPIが変更されている
+- `BrowserTracing`、`startTransaction`、`getCurrentHub`がエクスポートされていない
+- `main.tsx`でSentryの初期化が呼び出されていない
+
+**解決:**
+- Sentryの設定を簡素化（基本的なエラー監視のみ）
+- `main.tsx`にSentry初期化を追加
+- 不要なインポートとAPI呼び出しを削除
+
+**修正箇所:**
+- `src/config/sentry.ts` - 設定を簡素化
+- `src/main.tsx` - Sentry初期化を追加
+
+**結果:**
+- ✅ ビルドエラーが解消
+- ✅ Sentryの基本機能が有効
+- ✅ 本番環境でのエラー監視が可能
+
+### Sentry環境変数アクセス方法の修正 ✅
+
+**問題:**
+- ビルド後も`VITE_SENTRY_DSN`が文字列として残る
+- 環境変数が正しく置換されない
+
+**原因:**
+- Viteでは`process.env`ではなく`import.meta.env`を使用する必要がある
+- ブラウザで実行されるコードでの環境変数アクセス方法が間違っていた
+
+**解決:**
+- `process.env.VITE_SENTRY_DSN` → `import.meta.env.VITE_SENTRY_DSN`
+- `process.env.NODE_ENV` → `import.meta.env.PROD`
+- `process.env.NODE_ENV` → `import.meta.env.MODE`
+
+**修正箇所:**
+- `src/config/sentry.ts` - 環境変数アクセス方法を修正
+- `src/App.tsx` - 重複するSentry初期化を削除
+
+**結果:**
+- ✅ 環境変数が正しく置換される
+- ✅ Sentryの警告が解消
+- ✅ コンソールログの重複を解消 

@@ -47,6 +47,128 @@ curl -I http://localhost:3001/assets/services-bK8rpTAd.js
 - Viteのビルド出力構造を理解し、サーバーの静的ファイル配信設定と一致させる
 - 新しいアセットファイルを追加する際は、配信パターンが正しく設定されているか確認する
 
+## Sentry設定エラー
+
+### 問題の症状
+```
+⚠️ VITE_SENTRY_DSNが設定されていません。Sentry監視が無効です。
+```
+
+ビルド時のエラー：
+```
+"BrowserTracing" is not exported by "@sentry/react"
+"startTransaction" is not exported by "@sentry/react"
+"getCurrentHub" is not exported by "@sentry/react"
+```
+
+### 原因
+- Sentryの新しいバージョン（@sentry/react@9.42.0）でAPIが大幅に変更されている
+- 古いAPI（`BrowserTracing`、`startTransaction`、`getCurrentHub`）が削除されている
+- `main.tsx`でSentryの初期化が呼び出されていない
+
+### 解決方法
+1. **Sentry設定の簡素化**：
+   ```typescript
+   // src/config/sentry.ts
+   import * as Sentry from "@sentry/react";
+   
+   export const initSentry = () => {
+     if (process.env.NODE_ENV === 'production') {
+       const dsn = process.env.VITE_SENTRY_DSN;
+       
+       if (!dsn) {
+         console.warn('⚠️ VITE_SENTRY_DSNが設定されていません。Sentry監視が無効です。');
+         return;
+     }
+   
+       Sentry.init({
+         dsn: dsn,
+         environment: process.env.NODE_ENV,
+         beforeSend(event) {
+           if (event.request?.headers) {
+             delete event.request.headers['authorization'];
+           }
+           return event;
+         },
+       });
+       
+       console.log('✅ Sentry監視が有効になりました');
+     }
+   };
+   ```
+
+2. **main.tsxでの初期化**：
+   ```typescript
+   // src/main.tsx
+   import { initSentry } from './config/sentry';
+   
+   // Sentry初期化（アプリケーションの早期に実行）
+   initSentry();
+   ```
+
+### 確認方法
+- 本番環境でアプリケーションを起動
+- ブラウザのコンソールで「✅ Sentry監視が有効になりました」メッセージを確認
+- Sentryダッシュボードでエラーが受信されることを確認
+
+### 予防策
+- Sentryの新しいバージョンにアップデートする際は、APIの変更を確認する
+- 基本的なエラー監視のみを使用し、高度な機能は必要に応じて追加する
+- 環境変数`VITE_SENTRY_DSN`が正しく設定されているか確認する
+
+## Sentry環境変数アクセスエラー
+
+### 問題の症状
+```
+⚠️ VITE_SENTRY_DSNが設定されていません。Sentry監視が無効です。
+```
+
+ビルド後のファイルで`VITE_SENTRY_DSN`が文字列として残る：
+```javascript
+// ビルド後も文字列として残る
+const dsn = "VITE_SENTRY_DSN";
+```
+
+### 原因
+- Viteでは、ブラウザで実行されるコードで環境変数を使用する場合、`process.env`ではなく`import.meta.env`を使用する必要がある
+- 環境変数がビルド時に正しく置換されていない
+
+### 解決方法
+環境変数アクセス方法を修正：
+
+```typescript
+// 修正前
+if (process.env.NODE_ENV === 'production') {
+  const dsn = process.env.VITE_SENTRY_DSN;
+  // ...
+}
+
+// 修正後
+if (import.meta.env.PROD) {
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  // ...
+}
+```
+
+### 修正箇所
+- `src/config/sentry.ts` - 環境変数アクセス方法を修正
+- `src/App.tsx` - 重複するSentry初期化を削除
+
+### 確認方法
+```bash
+# ビルド後のファイルで環境変数が正しく置換されているか確認
+grep -o "VITE_SENTRY_DSN" dist/assets/index-*.js
+# 結果が空であることを確認
+
+grep -o "https://your-sentry-dsn" dist/assets/index-*.js
+# 実際のDSNが表示されることを確認
+```
+
+### 予防策
+- Viteプロジェクトでは、ブラウザで実行されるコードでは`import.meta.env`を使用する
+- 環境変数の置換が正しく行われているか、ビルド後のファイルで確認する
+- 重複する初期化処理がないか確認する
+
 ## 現在の主要問題（2025-07-25）
 
 ### 1. アカウント削除時の購入履歴残存問題
