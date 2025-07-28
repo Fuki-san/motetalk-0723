@@ -647,8 +647,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
             )}
           </div>
         )}
-        {/* 無料ユーザー向けCTA - 常に表示 */}
-        {usageLimit && usageLimit.plan === 'free' && (
+        {/* 無料ユーザー向けCTA - プレミアムユーザーには表示しない */}
+        {usageLimit && usageLimit.plan === 'free' && !usageLimit.isPremium && (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
               <div className="flex items-center justify-center mb-4">
