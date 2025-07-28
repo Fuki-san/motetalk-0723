@@ -186,6 +186,36 @@ app.use((req, res, next) => {
 // 静的ファイルの配信設定（JS、CSS、SVGファイルのみ）
 const staticPath = path.join(__dirname, '../dist');
 
+// ルートパスのJSファイルの配信（index-*.js）
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.js/)) {
+    console.log(`📁 Serving root JS file: ${req.path}`);
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+
+// ルートパスのCSSファイルの配信（index-*.css）
+app.use((req, res, next) => {
+  if (req.path.match(/\/index-.*\.css/)) {
+    console.log(`📁 Serving root CSS file: ${req.path}`);
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return express.static(staticPath)(req, res, next);
+  }
+  next();
+});
+
 // JSファイルの配信
 // 注意: Viteのビルド出力では、ファイルがdist/assets/ディレクトリに配置される
 // そのため、/assets/パスでマッチングする必要がある
