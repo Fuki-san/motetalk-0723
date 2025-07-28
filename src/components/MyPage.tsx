@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User, Crown, CreditCard, Settings, Bell, Shield, Download, Trash2, Star, Check } from 'lucide-react';
 import { purchaseSubscription, cancelSubscription, subscriptionPlans, templatePacks } from '../services/stripeService';
 import { useUserData } from '../hooks/useUserData';
@@ -22,31 +22,31 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [purchaseHistory, setPurchaseHistory] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchPurchaseHistory = async () => {
-      // Firebaseの現在のユーザーを直接取得
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
-      
-      setHistoryLoading(true);
-      try {
-        const response = await fetch('/api/purchase-history', {
-          headers: {
-            'Authorization': `Bearer ${await currentUser.getIdToken()}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setPurchaseHistory(data);
+  const fetchPurchaseHistory = useCallback(async () => {
+    // Firebaseの現在のユーザーを直接取得
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+    
+    setHistoryLoading(true);
+    try {
+      const response = await fetch('/api/purchase-history', {
+        headers: {
+          'Authorization': `Bearer ${await currentUser.getIdToken()}`
         }
-      } catch (error) {
-        console.error('Failed to fetch purchase history:', error);
-      } finally {
-        setHistoryLoading(false);
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPurchaseHistory(data);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch purchase history:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
     fetchPurchaseHistory();
   }, [authUser]);
 
