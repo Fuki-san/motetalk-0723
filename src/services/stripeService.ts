@@ -1,5 +1,4 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { getAuth } from 'firebase/auth';
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
@@ -7,20 +6,7 @@ if (!STRIPE_PUBLISHABLE_KEY) {
   console.error('Stripe publishable key is not configured');
 }
 
-// 認証トークンを取得
-const getAuthToken = async (): Promise<string | null> => {
-  try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (user) {
-      return await user.getIdToken();
-    }
-    return null;
-  } catch (error) {
-    console.error('Failed to get auth token:', error);
-    return null;
-  }
-};
+
 
 let stripePromise: Promise<Stripe | null>;
 
