@@ -347,7 +347,7 @@ export const templateCategories: TemplateCategory[] = [
     name: '会話ネタ',
     description: '会話が続く話題とボケ例30種類',
     price: 2500,
-    priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
+    priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
     icon: Star,
     templates: [
       {

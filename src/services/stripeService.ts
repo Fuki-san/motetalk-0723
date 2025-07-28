@@ -75,8 +75,8 @@ export const templatePacks: TemplatePack[] = [
 
   {
     id: 'date_invitation_pack',
-    name: '誘い文句大全',
-    description: 'カフェ打診〜ホテルまでの誘導文30種類',
+    name: 'デート誘い',
+    description: '自然で断られにくいデート誘いメッセージ30種類',
     price: 2500,
     features: ['段階別アプローチ', '相手に合わせた誘い方', '実践的な例文多数']
   },
