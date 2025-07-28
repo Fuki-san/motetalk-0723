@@ -187,8 +187,11 @@ app.use((req, res, next) => {
 const staticPath = path.join(__dirname, '../dist');
 
 // JSファイルの配信
+// 注意: Viteのビルド出力では、ファイルがdist/assets/ディレクトリに配置される
+// そのため、/assets/パスでマッチングする必要がある
+// 参照: docs/TROUBLESHOOTING.md - 静的ファイル配信エラー
 app.use((req, res, next) => {
-  if (req.path.match(/\/index-.*\.js/)) {
+  if (req.path.match(/\/assets\/.*\.js/)) {
     console.log(`📁 Serving JS file: ${req.path}`);
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -203,8 +206,11 @@ app.use((req, res, next) => {
 });
 
 // CSSファイルの配信
+// 注意: Viteのビルド出力では、ファイルがdist/assets/ディレクトリに配置される
+// そのため、/assets/パスでマッチングする必要がある
+// 参照: docs/TROUBLESHOOTING.md - 静的ファイル配信エラー
 app.use((req, res, next) => {
-  if (req.path.match(/\/index-.*\.css/)) {
+  if (req.path.match(/\/assets\/.*\.css/)) {
     console.log(`📁 Serving CSS file: ${req.path}`);
     res.setHeader('Content-Type', 'text/css; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');

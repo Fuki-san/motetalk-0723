@@ -1,5 +1,52 @@
 # トラブルシューティング
 
+## 静的ファイル配信エラー (404 Not Found)
+
+### 問題の症状
+```
+Failed to load resource: the server responded with a status of 404 (Not Found)
+- vendor-DavUf6mE.js
+- ui-CnXIi-yh.js  
+- services-bK8rpTAd.js
+```
+
+### 原因
+サーバーの静的ファイル配信設定で、`/assets/`ディレクトリ内のファイルが正しく処理されていない。
+
+**修正前の設定:**
+```javascript
+if (req.path.match(/\/index-.*\.js/))  // index-*.jsのみ
+if (req.path.match(/\/index-.*\.css/)) // index-*.cssのみ
+```
+
+**問題点:**
+- Viteのビルド出力では、ファイルが`dist/assets/`ディレクトリに配置される
+- サーバーが`/assets/vendor-*.js`、`/assets/ui-*.js`、`/assets/services-*.js`を処理できていない
+
+### 解決方法
+サーバーの静的ファイル配信パターンを修正：
+
+```javascript
+// 修正後
+if (req.path.match(/\/assets\/.*\.js/))  // assets/内のすべての.jsファイル
+if (req.path.match(/\/assets\/.*\.css/)) // assets/内のすべての.cssファイル
+```
+
+### 修正箇所
+- `server/index.js` の静的ファイル配信ミドルウェア部分
+
+### 確認方法
+```bash
+# 静的ファイルが正常に配信されているか確認
+curl -I http://localhost:3001/assets/vendor-DavUf6mE.js
+curl -I http://localhost:3001/assets/ui-CnXIi-yh.js
+curl -I http://localhost:3001/assets/services-bK8rpTAd.js
+```
+
+### 予防策
+- Viteのビルド出力構造を理解し、サーバーの静的ファイル配信設定と一致させる
+- 新しいアセットファイルを追加する際は、配信パターンが正しく設定されているか確認する
+
 ## 現在の主要問題（2025-07-25）
 
 ### 1. アカウント削除時の購入履歴残存問題
