@@ -182,8 +182,10 @@ export const purchaseSubscription = async (planId: string): Promise<void> => {
 // サブスクリプション解約
 export const cancelSubscription = async (): Promise<void> => {
   try {
+    console.log('🔍 cancelSubscription開始');
     // 認証トークンを取得
     const authToken = await getAuthToken();
+    console.log('🔑 認証トークン取得:', authToken ? '成功' : '失敗');
     
     const response = await fetch('/api/cancel-subscription', {
       method: 'POST',
@@ -193,15 +195,21 @@ export const cancelSubscription = async (): Promise<void> => {
       },
     });
 
+    console.log('📡 API Response status:', response.status);
+    console.log('📡 API Response ok:', response.ok);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
       throw new Error('Failed to cancel subscription');
     }
 
     const data = await response.json();
+    console.log('✅ API Response data:', data);
     return data;
 
   } catch (error) {
-    console.error('Subscription cancellation error:', error);
+    console.error('❌ Subscription cancellation error:', error);
     throw error;
   }
 };

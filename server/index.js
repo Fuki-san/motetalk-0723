@@ -455,7 +455,9 @@ app.get('/api/check-purchase-status', async (req, res) => {
 // サブスクリプション解約
 app.post('/api/cancel-subscription', authenticateUser, requireAuth, async (req, res) => {
   try {
+    console.log('🔄 サブスクリプション解約API呼び出し');
     const userId = req.user.uid;
+    console.log('👤 ユーザーID:', userId);
     
     if (!db) {
       return res.status(500).json({ error: 'Database not available' });

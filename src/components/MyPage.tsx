@@ -113,14 +113,17 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       return;
     }
 
+    console.log('🔄 サブスクリプション解約開始');
     setIsLoading(true);
     try {
-      await cancelSubscription();
+      console.log('📞 cancelSubscription API呼び出し');
+      const result = await cancelSubscription();
+      console.log('✅ cancelSubscription結果:', result);
       alert('サブスクリプションの解約処理を開始しました。');
       // ページをリロードして最新状態を取得
       window.location.reload();
     } catch (error) {
-      console.error('Cancellation error:', error);
+      console.error('❌ Cancellation error:', error);
       alert('解約処理中にエラーが発生しました。');
     } finally {
       setIsLoading(false);
