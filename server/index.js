@@ -870,6 +870,7 @@ app.get('/api/user-profile', authenticateUser, requireAuth, async (req, res) => 
       console.log('✅ ユーザープロフィール取得成功:', {
         uid: userId,
         plan: currentPlan,
+        subscriptionStatus: subscriptionStatus,
         purchasedTemplates: purchasedTemplates.length
       });
       

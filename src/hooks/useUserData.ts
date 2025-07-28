@@ -44,6 +44,7 @@ export const useUserData = () => {
             console.log('✅ ユーザープロフィール取得成功:', {
               uid: profileData.uid,
               plan: profileData.plan,
+              subscriptionStatus: profileData.subscriptionStatus,
               purchasedTemplates: profileData.purchasedTemplates?.length || 0
             });
           } else {
@@ -102,6 +103,7 @@ export const useUserData = () => {
             setUserProfile(profileData);
             console.log('🔄 ユーザーデータを更新しました:', {
               plan: profileData.plan,
+              subscriptionStatus: profileData.subscriptionStatus,
               purchasedTemplates: profileData.purchasedTemplates?.length || 0
             });
           }
