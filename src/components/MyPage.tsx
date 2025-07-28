@@ -13,7 +13,7 @@ interface MyPageProps {
 
 const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const { user: authUser, signOut } = useAuth();
-  const { userProfile, loading: userDataLoading } = useUserData();
+  const { userProfile, loading: userDataLoading, refreshUserData } = useUserData();
   const { settings, loading: settingsLoading, saving: settingsSaving, updateNotificationSetting, updatePrivacySetting } = useUserSettings();
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
@@ -120,8 +120,10 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       const result = await cancelSubscription();
       console.log('✅ cancelSubscription結果:', result);
       alert('サブスクリプションの解約処理を開始しました。');
-      // ページをリロードして最新状態を取得
-      window.location.reload();
+      // ユーザーデータを再取得して状態を更新
+      await refreshUserData();
+      // 購入履歴も再取得
+      await fetchPurchaseHistory();
     } catch (error) {
       console.error('❌ Cancellation error:', error);
       alert('解約処理中にエラーが発生しました。');
@@ -248,7 +250,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                     <div>
                       <div className="font-semibold text-gray-800">{userData.plan}</div>
                       <div className="text-sm text-gray-600">
-                        ステータス: {userData.subscriptionStatus === 'active' ? 'アクティブ' : '不明'}
+                        ステータス: {
+                          userData.subscriptionStatus === 'active' ? 'アクティブ' :
+                          userData.subscriptionStatus === 'cancel_at_period_end' ? '期間終了時に解約予定' :
+                          '不明'
+                        }
                       </div>
                     </div>
                   </div>
@@ -258,13 +264,20 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                   </div>
                 </div>
                 <div className="mt-4 flex space-x-3">
-                  <button 
-                    onClick={handleCancelSubscription}
-                    disabled={isLoading}
-                    className="flex-1 bg-red-100 text-red-700 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
-                  >
-                    {isLoading ? '処理中...' : '解約する'}
-                  </button>
+                  {userData.subscriptionStatus === 'active' && (
+                    <button 
+                      onClick={handleCancelSubscription}
+                      disabled={isLoading}
+                      className="flex-1 bg-red-100 text-red-700 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '処理中...' : '解約する'}
+                    </button>
+                  )}
+                  {userData.subscriptionStatus === 'cancel_at_period_end' && (
+                    <div className="flex-1 bg-yellow-100 text-yellow-700 py-2 px-4 rounded-lg text-center">
+                      期間終了時に解約予定
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
