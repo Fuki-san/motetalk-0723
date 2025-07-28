@@ -18,6 +18,7 @@ export interface TemplateCategory {
 }
 
 // テンプレートデータ
+// 2025-07-28: LINE移行テンプレートを削除し、3つのテンプレートのみに整理
 export const templateCategories: TemplateCategory[] = [
   {
     id: 'first_message_pack',

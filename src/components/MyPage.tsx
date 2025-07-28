@@ -385,6 +385,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                           <div key={purchase.id} className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
                             <div className="flex items-center justify-between">
                                                           <div>
+                              {/* 2025-07-28: テンプレート名の重複表示を修正 - 1回のみ表示 */}
                               <h4 className="font-medium text-gray-800">
                                 {templateInfo ? templateInfo.name : purchase.templateName}
                               </h4>
