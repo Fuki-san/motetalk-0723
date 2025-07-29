@@ -851,7 +851,8 @@ app.get('/api/user-profile', authenticateUser, requireAuth, async (req, res) => 
         const latestSubscription = subscriptions[0].data();
         if (latestSubscription.status === 'completed') {
           currentPlan = 'premium';
-          subscriptionStatus = 'active';
+          // subscriptionStatusはデータベースの値を優先（解約状態を保持）
+          // subscriptionStatus = 'active'; // この行を削除
         }
       }
       
