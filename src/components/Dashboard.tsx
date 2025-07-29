@@ -27,7 +27,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReplyIndex, setSelectedReplyIndex] = useState<number | null>(null);
   const [editableReply, setEditableReply] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
+
   const [userSettings, setUserSettings] = useState({
     backgroundContext: ''
   });
@@ -439,29 +439,20 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
             <h2 className="text-xl font-semibold text-gray-800">
               {conversation.length === 0 ? '相手からのメッセージ' : '相手からの次のメッセージ'}
             </h2>
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="ml-auto flex items-center space-x-1 text-purple-600 hover:text-purple-700 text-sm"
-            >
-              <Settings className="w-4 h-4" />
-              <span>背景状況設定</span>
-            </button>
           </div>
-          {showSettings && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">背景状況設定</h3>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
-                <textarea
-                  value={userSettings.backgroundContext}
-                  onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
-                  placeholder="例: 相手はちょっとギャルっぽくて、ノリもいいタイプです。軽くイジってもOKで、テンション高めに絡むとウケそうです。"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-              </div>
+          <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">背景状況設定</h3>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
+              <textarea
+                value={userSettings.backgroundContext}
+                onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
+                placeholder="例: 相手はちょっとギャル系の女子でノリがいい。私から「学生？」って聞いたあとの返信だ。"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
+                rows={3}
+              />
             </div>
-          )}
+          </div>
           <div className="space-y-4">
             <textarea
               value={inputMessage}
