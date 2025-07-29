@@ -78,12 +78,14 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     const latestSubscription = purchaseHistory?.subscriptions?.[0];
     console.log('🔍 購入履歴のサブスクリプション:', latestSubscription);
     
-    if (!latestSubscription?.purchasedAt) {
-      console.log('🔍 解約予定日計算: purchasedAtが見つかりません');
+    // purchasedAtまたはcreatedAtを使用
+    const purchaseDateStr = latestSubscription?.purchasedAt || latestSubscription?.createdAt;
+    if (!purchaseDateStr) {
+      console.log('🔍 解約予定日計算: purchasedAt/createdAtが見つかりません');
       return null;
     }
     
-    const purchaseDate = new Date(latestSubscription.purchasedAt);
+    const purchaseDate = new Date(purchaseDateStr);
     const cancellationDate = new Date(purchaseDate);
     cancellationDate.setMonth(cancellationDate.getMonth() + 1);
     
