@@ -17,12 +17,6 @@ export interface GenerateRepliesRequest {
   currentMessage: string;
   conversationHistory: ConversationTurn[];
   userProfile?: {
-    partnerName?: string;
-    age?: number;
-    interests?: string[];
-    personality?: string;
-    relationshipGoal?: 'casual' | 'serious' | 'friendship';
-    communicationStyle?: 'polite' | 'casual' | 'funny';
     backgroundContext?: string;
   };
 }
@@ -59,14 +53,9 @@ export const generateReplies = async (
       .join('\n\n');
 
     // ユーザープロフィール情報を構築
-    const profileContext = request.userProfile ? `
-【あなたの設定】
-${request.userProfile.partnerName ? `相手の名前: ${request.userProfile.partnerName}` : ''}
-${request.userProfile.age ? `あなたの年齢: ${request.userProfile.age}歳` : ''}
-${request.userProfile.interests ? `あなたの趣味・興味: ${request.userProfile.interests.join('、')}` : ''}
-${request.userProfile.relationshipGoal ? `関係性の目標: ${request.userProfile.relationshipGoal === 'casual' ? 'カジュアルな関係' : request.userProfile.relationshipGoal === 'serious' ? '真剣な交際' : '友達関係'}` : ''}
-${request.userProfile.communicationStyle ? `コミュニケーションスタイル: ${request.userProfile.communicationStyle === 'polite' ? '丁寧' : request.userProfile.communicationStyle === 'casual' ? 'カジュアル' : 'ユーモア重視'}` : ''}
-${request.userProfile.backgroundContext ? `※相手の雰囲気・背景状況: ${request.userProfile.backgroundContext}` : ''}
+    const profileContext = request.userProfile?.backgroundContext ? `
+【相手の雰囲気・背景状況】
+${request.userProfile.backgroundContext}
 ` : '';
     // プロンプトを構築
     const prompt = `あなたは20歳のモテる男子大学生です。

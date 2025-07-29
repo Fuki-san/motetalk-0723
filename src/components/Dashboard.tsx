@@ -29,11 +29,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
   const [editableReply, setEditableReply] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [userSettings, setUserSettings] = useState({
-    partnerName: '',
-    age: '',
-    interests: '',
-    relationshipGoal: 'casual' as 'casual' | 'serious' | 'friendship',
-    communicationStyle: 'casual' as 'polite' | 'casual' | 'funny',
     backgroundContext: ''
   });
   const [usageLimit, setUsageLimit] = useState<UsageLimit | null>(null);
@@ -157,11 +152,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
         currentMessage: inputMessage,
         conversationHistory: apiConversationHistory,
         userProfile: {
-          partnerName: userSettings.partnerName || undefined,
-          age: userSettings.age ? parseInt(userSettings.age) : undefined,
-          interests: userSettings.interests ? userSettings.interests.split('、').map(s => s.trim()) : undefined,
-          relationshipGoal: userSettings.relationshipGoal,
-          communicationStyle: userSettings.communicationStyle,
           backgroundContext: userSettings.backgroundContext || undefined
         }
       });
@@ -460,81 +450,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
           {showSettings && (
             <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
               <h3 className="text-sm font-medium text-gray-700 mb-3">背景状況設定</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">相手の名前（任意）</label>
-                  <input
-                    type="text"
-                    value={userSettings.partnerName}
-                    onChange={(e) => setUserSettings({...userSettings, partnerName: e.target.value})}
-                    placeholder="例: さくらさん"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">あなたの年齢（任意）</label>
-                  <input
-                    type="number"
-                    value={userSettings.age}
-                    onChange={(e) => setUserSettings({...userSettings, age: e.target.value})}
-                    placeholder="例: 28"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">あなたの趣味・興味（任意）</label>
-                  <input
-                    type="text"
-                    value={userSettings.interests}
-                    onChange={(e) => setUserSettings({...userSettings, interests: e.target.value})}
-                    placeholder="例: 映画鑑賞、カフェ巡り、読書"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">関係性の目標</label>
-                  <select
-                    value={userSettings.relationshipGoal}
-                    onChange={(e) => setUserSettings({...userSettings, relationshipGoal: e.target.value as any})}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="casual">カジュアルな関係</option>
-                    <option value="serious">真剣な交際</option>
-                    <option value="friendship">友達関係</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">コミュニケーションスタイル</label>
-                  <div className="flex space-x-4">
-                    {[
-                      { value: 'polite', label: '丁寧' },
-                      { value: 'casual', label: 'カジュアル' },
-                      { value: 'funny', label: 'ユーモア重視' }
-                    ].map((style) => (
-                      <label key={style.value} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="communicationStyle"
-                          value={style.value}
-                          checked={userSettings.communicationStyle === style.value}
-                          onChange={(e) => setUserSettings({...userSettings, communicationStyle: e.target.value as any})}
-                          className="text-purple-600"
-                        />
-                        <span className="text-sm text-gray-700">{style.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
-                  <textarea
-                    value={userSettings.backgroundContext}
-                    onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
-                    placeholder="例: 相手はちょっとギャルっぽくて、ノリもいいタイプです。軽くイジってもOKで、テンション高めに絡むとウケそうです。"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
-                    rows={3}
-                  />
-                </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
+                <textarea
+                  value={userSettings.backgroundContext}
+                  onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
+                  placeholder="例: 相手はちょっとギャルっぽくて、ノリもいいタイプです。軽くイジってもOKで、テンション高めに絡むとウケそうです。"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
               </div>
             </div>
           )}
