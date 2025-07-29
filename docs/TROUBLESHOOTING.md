@@ -1,4 +1,49 @@
-# トラブルシューティングガイド
+# Troubleshooting Guide
+
+## サブスクリプション解約機能
+
+### 問題: 解約後もUIが「アクティブ」のまま表示される
+
+**症状:**
+- 解約ボタンを押しても「アクティブ」のまま表示
+- フロントエンドUIが更新されない
+- バックエンドログでは解約処理は成功している
+
+**原因:**
+- `/api/user-profile`エンドポイントで購入履歴処理により`subscriptionStatus`が上書きされる
+- データベースから取得した`cancel_at_period_end`が`active`に上書きされる
+
+**解決策:**
+- `server/index.js`の847-853行目で`subscriptionStatus = 'active'`の上書きを削除
+- データベースから取得した`subscriptionStatus`を優先するように修正
+
+**確認方法:**
+```javascript
+// バックエンドログで確認
+🔍 データベースから取得したユーザーデータ: { plan: 'premium', subscriptionStatus: 'cancel_at_period_end' }
+✅ ユーザープロフィール取得成功: { subscriptionStatus: 'cancel_at_period_end' }
+```
+
+### 問題: 解約メッセージが不適切
+
+**症状:**
+- 「サブスクリプションの解約処理を開始しました」と表示
+
+**解決策:**
+- `src/components/MyPage.tsx`でメッセージを「サブスクリプションを解約しました」に修正
+
+### 期間終了時の自動解約
+
+**実装状況:**
+- ✅ `customer.subscription.deleted` Webhookで`handleSubscriptionEnd`実行
+- ✅ 期間終了時にユーザープランが`free`に戻る
+- ✅ フロントエンドも無料ユーザー表示に戻る
+
+**テスト方法:**
+- 実際の期間終了（1ヶ月後）を待つ
+- または、Stripeテスト環境で期間を短縮してテスト
+
+---
 
 ## 購入履歴表示の問題
 

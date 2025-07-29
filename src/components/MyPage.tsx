@@ -119,7 +119,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       console.log('📞 cancelSubscription API呼び出し');
       const result = await cancelSubscription();
       console.log('✅ cancelSubscription結果:', result);
-      alert('サブスクリプションの解約処理を開始しました。');
+      alert('サブスクリプションを解約しました。');
       // ユーザーデータを再取得して状態を更新
       await refreshUserData();
       // 購入履歴も再取得

@@ -972,3 +972,59 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 
 ### 修正日
 2025-07-28 
+
+## 2025-01-28: サブスクリプション解約機能の修正
+
+### 問題
+- サブスクリプション解約後、フロントエンドUIが更新されない
+- 解約ボタンを押しても「アクティブ」のまま表示される
+- 解約メッセージが「解約処理を開始しました」となっている
+
+### 原因分析
+1. **バックエンド解約処理は成功していた**
+   - データベースの`subscriptionStatus`は`cancel_at_period_end`に正しく更新
+   - しかし、`/api/user-profile`エンドポイントで購入履歴処理により上書きされていた
+
+2. **APIレスポンスの問題**
+   ```javascript
+   // 問題の箇所（server/index.js 847-853行目）
+   if (subscriptions.length > 0) {
+     const latestSubscription = subscriptions[0].data();
+     if (latestSubscription.status === 'completed') {
+       currentPlan = 'premium';
+       subscriptionStatus = 'active';  // ← ここで上書き！
+     }
+   }
+   ```
+
+### 修正内容
+
+#### 1. バックエンド修正（server/index.js）
+- **問題箇所**: `/api/user-profile`エンドポイントで購入履歴から`subscriptionStatus`を上書き
+- **修正**: データベースから取得した`subscriptionStatus`を優先するように変更
+- **変更箇所**: 847-853行目の`subscriptionStatus = 'active'`を削除
+
+#### 2. フロントエンド修正（src/components/MyPage.tsx）
+- **メッセージ修正**: 「サブスクリプションの解約処理を開始しました」→「サブスクリプションを解約しました」
+- **UI更新**: 解約後に`refreshUserData()`と`fetchPurchaseHistory()`を呼び出してUIを更新
+
+#### 3. デバッグログ追加
+- **バックエンド**: 解約処理とユーザープロフィール取得時の詳細ログ
+- **フロントエンド**: APIレスポンスデータの詳細ログ
+
+### 結果
+- ✅ 解約後、UIが正しく「期間終了時に解約予定」と表示される
+- ✅ 解約ボタンが非表示になる
+- ✅ メッセージが「サブスクリプションを解約しました」に修正
+
+### 期間終了時の自動解約機能
+- **実装済み**: `customer.subscription.deleted` Webhookで`handleSubscriptionEnd`実行
+- **動作**: 期間終了時にユーザープランが`free`に戻り、フロントエンドも無料ユーザー表示に戻る
+- **テスト**: 実際の期間終了（1ヶ月後）またはStripeテスト環境での短縮期間で確認可能
+
+### 技術的詳細
+- **データフロー**: 解約ボタン → バックエンドAPI → データベース更新 → フロントエンドUI更新
+- **状態管理**: `subscriptionStatus`フィールドで解約状態を管理
+- **Webhook処理**: Stripeからの自動解約イベントで最終的な無料プランへの復帰
+
+--- 
