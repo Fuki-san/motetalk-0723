@@ -46,7 +46,7 @@ export const generateReplies = async (
       throw new Error('Gemini API key is not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // 会話履歴を構築
     const conversationContext = request.conversationHistory
@@ -67,14 +67,17 @@ ${request.userProfile.relationshipGoal ? `関係性の目標: ${request.userProf
 ${request.userProfile.communicationStyle ? `コミュニケーションスタイル: ${request.userProfile.communicationStyle === 'polite' ? '丁寧' : request.userProfile.communicationStyle === 'casual' ? 'カジュアル' : 'ユーモア重視'}` : ''}
 ` : '';
     // プロンプトを構築
-    const prompt = `あなたは日本のマッチングアプリで男性ユーザーをサポートするAIアシスタントです。
-女性からのメッセージに対して、自然で魅力的な返信を3つ提案してください。
+    const prompt = `あなたは20歳のモテる若者であり、返信を考えるプロです。
+以下の相手からのメッセージに対して、モテる男性が返すような「余裕・ユーモア・包容力」を含んだ返信を3つ考えてください。
+あくまで自然で、長すぎない返信にすることも意識してください。
 
 【重要な指針】
+- 余裕のある態度で相手の気持ちを受け止める
+- ユーモアを交えつつも、相手を尊重する姿勢
+- 包容力のある優しい言葉で相手を包み込む
 - 自然で親しみやすい日本語を使用
 - 相手に興味を示し、会話を続けたくなるような内容
 - 押し付けがましくなく、適度な距離感を保つ
-- ユーモアを交えつつも、相手を尊重する姿勢
 - 会話の流れを考慮した文脈に合った返信
 - 返信案の説明や分類は含めず、返信内容のみを提供
 
