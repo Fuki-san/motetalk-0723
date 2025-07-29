@@ -100,6 +100,7 @@ export const useUserData = () => {
 
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
+            console.log('📡 APIから取得したプロフィールデータ:', profileData);
             setUserProfile(profileData);
             console.log('🔄 ユーザーデータを更新しました:', {
               plan: profileData.plan,

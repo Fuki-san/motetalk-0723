@@ -488,6 +488,7 @@ app.post('/api/cancel-subscription', authenticateUser, requireAuth, async (req, 
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
     
+    console.log('✅ ユーザーのsubscriptionStatusをcancel_at_period_endに更新:', userId);
     console.log('🔄 サブスクリプション解約リクエスト受信');
     
     res.json({
@@ -828,6 +829,10 @@ app.get('/api/user-profile', authenticateUser, requireAuth, async (req, res) => 
       }
       
       const userData = userDoc.data();
+      console.log('🔍 データベースから取得したユーザーデータ:', {
+        plan: userData.plan,
+        subscriptionStatus: userData.subscriptionStatus
+      });
       
       // 購入履歴から最新のサブスクリプション状態を確認（インデックスエラー回避のため簡素化）
       const allPurchases = await db.collection('purchases')
