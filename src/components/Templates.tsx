@@ -338,7 +338,7 @@ const Templates = () => {
                               <span className="text-sm text-gray-500">
                                 {purchasedTemplates.includes(selectedCategoryData.id) 
                                   ? 'プレビュー（購入済み - 購入済みページで全内容を確認）' 
-                                  : 'プレビュー（購入で全30種解放）'
+                                  : 'プレビュー（購入で全15種解放）'
                                 }
                               </span>
                             </div>
@@ -353,7 +353,7 @@ const Templates = () => {
                             <span>
                               {purchasedTemplates.includes(selectedCategoryData.id)
                                 ? '購入済み - 購入済みページで全テンプレートを確認'
-                                : '購入後に全30種のテンプレートが利用可能'
+                                : '購入後に全15種のテンプレートが利用可能'
                               }
                             </span>
                           </div>

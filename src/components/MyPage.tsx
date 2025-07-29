@@ -67,6 +67,27 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     );
   }
 
+  // 解約予定日を計算する関数
+  const getCancellationDate = () => {
+    if (userProfile?.subscriptionStatus !== 'cancel_at_period_end') {
+      return null;
+    }
+    
+    // 購入履歴から最新のサブスクリプション購入日を取得
+    const latestSubscription = purchaseHistory?.subscriptions?.[0];
+    if (!latestSubscription?.purchasedAt) {
+      return null;
+    }
+    
+    const purchaseDate = new Date(latestSubscription.purchasedAt);
+    const cancellationDate = new Date(purchaseDate);
+    cancellationDate.setMonth(cancellationDate.getMonth() + 1);
+    
+    return cancellationDate;
+  };
+
+  const cancellationDate = getCancellationDate();
+
   const userData = {
     name: user?.name || userProfile?.name || 'ユーザー',
     email: user?.email || userProfile?.email || '',
@@ -262,7 +283,10 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                       <div className="text-sm text-gray-600">
                         ステータス: {
                           userData.subscriptionStatus === 'active' ? 'アクティブ' :
-                          userData.subscriptionStatus === 'cancel_at_period_end' ? '期間終了時に解約予定' :
+                          userData.subscriptionStatus === 'cancel_at_period_end' ? 
+                            cancellationDate ? 
+                              `解約予定: ${cancellationDate.toLocaleDateString('ja-JP')}` :
+                              '期間終了時に解約予定' :
                           '不明'
                         }
                       </div>
@@ -285,7 +309,10 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                   )}
                   {userData.subscriptionStatus === 'cancel_at_period_end' && (
                     <div className="flex-1 bg-yellow-100 text-yellow-700 py-2 px-4 rounded-lg text-center">
-                      期間終了時に解約予定
+                      {cancellationDate ? 
+                        `解約予定: ${cancellationDate.toLocaleDateString('ja-JP')}` :
+                        '期間終了時に解約予定'
+                      }
                     </div>
                   )}
                 </div>

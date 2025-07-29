@@ -116,7 +116,7 @@ export const templateCategories: TemplateCategory[] = [
     templates: [
       {
         id: 'date_1',
-        content: '今度よかったらご飯でも行きません？',
+        content: '絶対楽しい気しかしない、リアルでも話してみたい笑',
         category: 'date_invitation_pack',
         isPreview: true
       },
@@ -157,7 +157,7 @@ export const templateCategories: TemplateCategory[] = [
       },
       {
         id: 'date_9',
-        content: '絶対楽しい気しかしない、リアルでも話してみたい笑',
+        content: '今度よかったらご飯でも行きません？',
         category: 'date_invitation_pack',
       },
       {
@@ -202,7 +202,7 @@ export const templateCategories: TemplateCategory[] = [
     templates: [
       {
         id: 'conversation_1',
-        content: '何系で働いてるの？',
+        content: '誰かに似てるって言われたことない？笑',
         category: 'conversation_topics_pack',
         isPreview: true
       },
@@ -213,7 +213,7 @@ export const templateCategories: TemplateCategory[] = [
       },
       {
         id: 'conversation_3',
-        content: '誰かに似てるって言われたことない？笑',
+        content: '何系で働いてるの？',
         category: 'conversation_topics_pack',
       },
       {
