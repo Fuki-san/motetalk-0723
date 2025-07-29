@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import Stripe from 'stripe';
 import admin from 'firebase-admin';
 import path from 'path';
@@ -171,17 +173,43 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// セキュリティヘッダーの設定（開発環境では緩和）
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
-    // 本番環境では基本的なセキュリティヘッダーのみ
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    // Cross-Origin-Opener-Policyを緩和してGoogleログインを許可
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+// セキュリティヘッダーの設定
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://generativelanguage.googleapis.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
   }
-  next();
+}));
+
+// レート制限の設定
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分
+  max: 100, // リクエスト制限
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
 });
+
+// レート制限を適用
+app.use(limiter);
+
+// CORS設定
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://motetalk-0723.onrender.com', 'http://localhost:5173'],
+  credentials: true
+}));
 
 // 静的ファイルの配信設定（JS、CSS、SVGファイルのみ）
 const staticPath = path.join(__dirname, '../dist');
