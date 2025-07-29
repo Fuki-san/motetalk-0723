@@ -18,165 +18,90 @@ export interface TemplateCategory {
 }
 
 // テンプレートデータ
-// 2025-07-28: LINE移行テンプレートを削除し、3つのテンプレートのみに整理
+// 2025-01-28: 15選の魅力的なテンプレートに更新
 export const templateCategories: TemplateCategory[] = [
   {
     id: 'first_message_pack',
     name: '初回メッセージ',
-    description: 'Tinder・タップル用の返信率が高い初回メッセージ30種類',
+    description: 'Tinder・タップル用の返信率が高い初回メッセージ15種類',
     price: 2500,
     priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14',
     icon: MessageCircle,
     templates: [
       {
         id: 'first_1',
-        content: 'はじめまして！プロフィールを拝見して、[趣味]をされているのを見て親近感を感じました。僕も[関連する経験]をしていて、とても興味深いです。よろしければお話しさせていただけませんか？',
+        content: '初めまして！写真めっちゃ可愛いですね！',
         category: 'first_message_pack',
         isPreview: true
       },
       {
         id: 'first_2',
-        content: '[場所]の写真、とても素敵ですね！雰囲気がすごく良くて、きっと楽しい時間を過ごされたんだろうなと思いました。僕も[関連する場所や体験]が好きで、お話しできればと思います。',
+        content: '初めまして！雰囲気可愛すぎて好きです',
         category: 'first_message_pack',
       },
       {
         id: 'first_3',
-        content: 'こんにちは！プロフィール見させていただきました。[具体的な共通点]について、とても興味があります。もしよろしければ、お話しさせていただけませんか？',
+        content: '初めまして！服めっちゃオシャレですね',
         category: 'first_message_pack',
       },
       {
         id: 'first_4',
-        content: 'プロフィール拝見しました！[具体的な印象]で、とても魅力的だなと思いました。よろしければ、お話しさせていただけませんか？',
+        content: '初めまして！透明感エグいですね、、',
         category: 'first_message_pack',
       },
       {
         id: 'first_5',
-        content: 'はじめまして！[共通の趣味や関心]について、とても興味があります。お話しできればと思います。',
+        content: '初めまして！笑顔にやられました笑好きです',
         category: 'first_message_pack',
       },
       {
         id: 'first_6',
-        content: 'プロフィール見させていただきました！[具体的な写真や内容]がとても印象的で、お話しできればと思います。',
+        content: '初めまして！オーラ強すぎて目に止まりました笑',
         category: 'first_message_pack',
       },
       {
         id: 'first_7',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
+        content: '初めまして！清楚そうなのにちょっとギャルっぽい感じが好きです',
         category: 'first_message_pack',
       },
       {
         id: 'first_8',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
+        content: '初めまして！髪型めっちゃ似合ってて可愛いです',
         category: 'first_message_pack',
       },
       {
         id: 'first_9',
-        content: 'プロフィール拝見しました！[具体的な印象]で、とても魅力的だなと思いました。よろしければ、お話しさせていただけませんか？',
+        content: '初めまして！距離めっちゃ近いですね笑会って話してみたいです！',
         category: 'first_message_pack',
       },
       {
         id: 'first_10',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
+        content: '初めまして！〇〇好きなんですね、自分もめっちゃ好きです！',
         category: 'first_message_pack',
       },
       {
         id: 'first_11',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
+        content: '初めまして！趣味センス良すぎません？話合いそうです笑',
         category: 'first_message_pack',
       },
       {
         id: 'first_12',
-        content: 'プロフィール見させていただきました！[具体的な写真や内容]がとても印象的で、お話しできればと思います。',
+        content: '初めまして！〇〇同士、絶対話し合いなと思いました笑',
         category: 'first_message_pack',
       },
       {
         id: 'first_13',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
+        content: '初めまして！レベチで可愛すぎません？笑',
         category: 'first_message_pack',
       },
       {
         id: 'first_14',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
+        content: '初めまして！あんま言わないんですけど、めっちゃ可愛いですね笑',
         category: 'first_message_pack',
       },
       {
         id: 'first_15',
-        content: 'プロフィール拝見しました！[具体的な印象]で、とても魅力的だなと思いました。よろしければ、お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_16',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_17',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_18',
-        content: 'プロフィール見させていただきました！[具体的な写真や内容]がとても印象的で、お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_19',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_20',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_21',
-        content: 'プロフィール拝見しました！[具体的な印象]で、とても魅力的だなと思いました。よろしければ、お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_22',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_23',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_24',
-        content: 'プロフィール見させていただきました！[具体的な写真や内容]がとても印象的で、お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_25',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_26',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_27',
-        content: 'プロフィール拝見しました！[具体的な印象]で、とても魅力的だなと思いました。よろしければ、お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_28',
-        content: 'こんにちは！[共通の関心事]について、とても興味があります。お話しさせていただけませんか？',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_29',
-        content: 'はじめまして！[具体的な体験や趣味]について、とても興味深いです。お話しできればと思います。',
-        category: 'first_message_pack',
-      },
-      {
-        id: 'first_30',
-        content: 'プロフィール見させていただきました！[具体的な写真や内容]がとても印象的で、お話しできればと思います。',
+        content: '初めまして！マッチありがとうございます。仲良くなれたら嬉しいです！',
         category: 'first_message_pack',
       }
     ]
@@ -184,160 +109,85 @@ export const templateCategories: TemplateCategory[] = [
   {
     id: 'date_invitation_pack',
     name: 'デート誘い',
-    description: '自然で断られにくいデート誘いメッセージ30種類',
+    description: '自然で断られにくいデート誘いメッセージ15種類',
     price: 2500,
     priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
     icon: Coffee,
     templates: [
       {
         id: 'date_1',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: '今度よかったらご飯でも行きません？',
         category: 'date_invitation_pack',
         isPreview: true
       },
       {
         id: 'date_2',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: '気が合いそうだから、一回話してみたいなって思って！',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_3',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: 'こんな話できる人初めてかも！リアルでも話してみたい笑',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_4',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: 'カフェ好きって言ってたけど、よかったら一緒に行こうよ',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_5',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: 'ご飯派？カフェ派？今度どっちか行こ笑',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_6',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: 'お酒いけるタイプ？一緒に飲も〜',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_7',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: '普通に会ってみたいって思ったの初めてかも笑',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_8',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: '週末とか空いてたらご飯行こうよ〜',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_9',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: '絶対楽しい気しかしない、リアルでも話してみたい笑',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_10',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: '近くっぽいし、会える距離なのいいなって思った！',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_11',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: '今度時間あったら、ちょっとだけでも会って話そ！',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_12',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: '10分だけでいいから電話したいな',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_13',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
+        content: '〇〇のお店めっちゃうまいんだけど、一緒に行こ〜',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_14',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: 'ちょっと行ってみたいカフェあるんだけど、付き合ってくれる？笑',
         category: 'date_invitation_pack',
       },
       {
         id: 'date_15',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_16',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_17',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_18',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_19',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_20',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_21',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_22',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_23',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_24',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_25',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_26',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_27',
-        content: '今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_28',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_29',
-        content: 'もしよろしければ、今度一緒に[場所]に行きませんか？とても素敵な場所で、きっと気に入っていただけると思います。',
-        category: 'date_invitation_pack',
-      },
-      {
-        id: 'date_30',
-        content: '[場所]でお茶でもいかがでしょうか？雰囲気が良くて、お話しするのにぴったりの場所です。',
+        content: '写真の雰囲気的に、一緒にいると楽しそうな気しかしない笑　今度会ってみよ！',
         category: 'date_invitation_pack',
       }
     ]
@@ -345,160 +195,85 @@ export const templateCategories: TemplateCategory[] = [
   {
     id: 'conversation_topics_pack',
     name: '会話ネタ',
-    description: '会話が続く話題とボケ例30種類',
+    description: '会話が続く話題とボケ例15種類',
     price: 2500,
     priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
     icon: Star,
     templates: [
       {
         id: 'conversation_1',
-        content: '最近何か面白いことがありましたか？僕は[具体的な体験]があって、とても楽しかったです。',
+        content: '何系で働いてるの？',
         category: 'conversation_topics_pack',
         isPreview: true
       },
       {
         id: 'conversation_2',
-        content: '[趣味]について詳しく教えてください！とても興味があります。',
+        content: '週末って何してるの？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_3',
-        content: '最近見た映画やドラマで印象に残ったものはありますか？',
+        content: '誰かに似てるって言われたことない？笑',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_4',
-        content: '[場所]に行ったことがありますか？とても素敵な場所だと思います。',
+        content: '旅行とか好き？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_5',
-        content: '最近何か新しいことに挑戦しましたか？',
+        content: '好きな芸能人とかタイプってどんな感じ？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_6',
-        content: '[食べ物]は好きですか？僕も大好きです。',
+        content: '何食べるの好き？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_7',
-        content: '最近読んだ本で印象に残ったものはありますか？',
+        content: 'バイト何してたの？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_8',
-        content: '[音楽]は好きですか？とても良い曲だと思います。',
+        content: 'サークル入ってた？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_9',
-        content: '最近何か楽しいことがありましたか？',
+        content: 'どれくらい彼氏いないの？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_10',
-        content: '[スポーツ]は好きですか？とても楽しいスポーツだと思います。',
+        content: 'お酒飲める？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_11',
-        content: '最近何か新しい発見がありましたか？',
+        content: 'ロングって可愛い人しかいないよね笑',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_12',
-        content: '[アート]は好きですか？とても美しいと思います。',
+        content: '地元どこ〜？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_13',
-        content: '最近何か感動したことがありましたか？',
+        content: '普段どんな曲聴いてる？',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_14',
-        content: '[旅行]は好きですか？とても楽しい体験だと思います。',
+        content: '〇〇って話してて思ったけど、絶対〇〇タイプだよね？合ってる？笑',
         category: 'conversation_topics_pack',
       },
       {
         id: 'conversation_15',
-        content: '最近何か新しいことに気づきましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_16',
-        content: '[料理]は好きですか？とても美味しそうだと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_17',
-        content: '最近何か新しい発見がありましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_18',
-        content: '[ファッション]は好きですか？とても素敵だと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_19',
-        content: '最近何か楽しいことがありましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_20',
-        content: '[ゲーム]は好きですか？とても楽しいゲームだと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_21',
-        content: '最近何か新しいことに挑戦しましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_22',
-        content: '[写真]は好きですか？とても美しい写真だと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_23',
-        content: '最近何か感動したことがありましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_24',
-        content: '[ダンス]は好きですか？とても楽しいダンスだと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_25',
-        content: '最近何か新しい発見がありましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_26',
-        content: '[ヨガ]は好きですか？とても健康的な運動だと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_27',
-        content: '最近何か楽しいことがありましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_28',
-        content: '[ランニング]は好きですか？とても健康的な運動だと思います。',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_29',
-        content: '最近何か新しいことに気づきましたか？',
-        category: 'conversation_topics_pack',
-      },
-      {
-        id: 'conversation_30',
-        content: '[瞑想]は好きですか？とてもリラックスできると思います。',
+        content: '〇〇で会ったの何回目？',
         category: 'conversation_topics_pack',
       }
     ]
