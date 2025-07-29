@@ -33,7 +33,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     age: '',
     interests: '',
     relationshipGoal: 'casual' as 'casual' | 'serious' | 'friendship',
-    communicationStyle: 'casual' as 'polite' | 'casual' | 'funny'
+    communicationStyle: 'casual' as 'polite' | 'casual' | 'funny',
+    backgroundContext: ''
   });
   const [usageLimit, setUsageLimit] = useState<UsageLimit | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
@@ -160,7 +161,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
           age: userSettings.age ? parseInt(userSettings.age) : undefined,
           interests: userSettings.interests ? userSettings.interests.split('、').map(s => s.trim()) : undefined,
           relationshipGoal: userSettings.relationshipGoal,
-          communicationStyle: userSettings.communicationStyle
+          communicationStyle: userSettings.communicationStyle,
+          backgroundContext: userSettings.backgroundContext || undefined
         }
       });
       if (response.success) {
@@ -452,13 +454,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
               className="ml-auto flex items-center space-x-1 text-purple-600 hover:text-purple-700 text-sm"
             >
               <Settings className="w-4 h-4" />
-              <span>パーソナライズ設定</span>
+              <span>背景状況設定</span>
             </button>
           </div>
           {showSettings && (
             <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">パーソナライズ設定</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">背景状況設定</h3>
+              <div className="space-y-4">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">相手の名前（任意）</label>
                   <input
@@ -501,7 +503,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                     <option value="friendship">友達関係</option>
                   </select>
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-xs text-gray-600 mb-1">コミュニケーションスタイル</label>
                   <div className="flex space-x-4">
                     {[
@@ -522,6 +524,16 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
                       </label>
                     ))}
                   </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
+                  <textarea
+                    value={userSettings.backgroundContext}
+                    onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
+                    placeholder="例: 相手はちょっとギャルっぽくて、ノリもいいタイプです。軽くイジってもOKで、テンション高めに絡むとウケそうです。"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
                 </div>
               </div>
             </div>

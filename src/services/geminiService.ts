@@ -23,6 +23,7 @@ export interface GenerateRepliesRequest {
     personality?: string;
     relationshipGoal?: 'casual' | 'serious' | 'friendship';
     communicationStyle?: 'polite' | 'casual' | 'funny';
+    backgroundContext?: string;
   };
 }
 
@@ -65,21 +66,19 @@ ${request.userProfile.age ? `あなたの年齢: ${request.userProfile.age}歳` 
 ${request.userProfile.interests ? `あなたの趣味・興味: ${request.userProfile.interests.join('、')}` : ''}
 ${request.userProfile.relationshipGoal ? `関係性の目標: ${request.userProfile.relationshipGoal === 'casual' ? 'カジュアルな関係' : request.userProfile.relationshipGoal === 'serious' ? '真剣な交際' : '友達関係'}` : ''}
 ${request.userProfile.communicationStyle ? `コミュニケーションスタイル: ${request.userProfile.communicationStyle === 'polite' ? '丁寧' : request.userProfile.communicationStyle === 'casual' ? 'カジュアル' : 'ユーモア重視'}` : ''}
+${request.userProfile.backgroundContext ? `※相手の雰囲気・背景状況: ${request.userProfile.backgroundContext}` : ''}
 ` : '';
     // プロンプトを構築
-    const prompt = `あなたは20歳のモテる若者であり、返信を考えるプロです。
-以下の相手からのメッセージに対して、モテる男性が返すような「余裕・ユーモア・包容力」を含んだ返信を3つ考えてください。
-あくまで自然で、長すぎない返信にすることも意識してください。
+    const prompt = `あなたは20歳のモテる男子大学生です。
+ノリが良くて、ユーモアやちょっとしたボケ・イジりを交えた軽い返信が得意です。
+以下の相手のメッセージに対して、
+・LINEっぽく自然に
+・ちょっとふざけてて
+・でも感じは良くて
+・相手が返しやすいようなテンションで、3つの返信を考えてください。
 
-【重要な指針】
-- 余裕のある態度で相手の気持ちを受け止める
-- ユーモアを交えつつも、相手を尊重する姿勢
-- 包容力のある優しい言葉で相手を包み込む
-- 自然で親しみやすい日本語を使用
-- 相手に興味を示し、会話を続けたくなるような内容
-- 押し付けがましくなく、適度な距離感を保つ
-- 会話の流れを考慮した文脈に合った返信
-- 返信案の説明や分類は含めず、返信内容のみを提供
+会話を広げたり、ツッコミやボケで笑わせたりできるとベストです。
+長文にならず、1〜2行のテンポ感を大切にしてください。
 
 ${profileContext}
 
