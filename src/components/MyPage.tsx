@@ -70,18 +70,27 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   // 解約予定日を計算する関数
   const getCancellationDate = () => {
     if (userProfile?.subscriptionStatus !== 'cancel_at_period_end') {
+      console.log('🔍 解約予定日計算: subscriptionStatusがcancel_at_period_endではありません', userProfile?.subscriptionStatus);
       return null;
     }
     
     // 購入履歴から最新のサブスクリプション購入日を取得
     const latestSubscription = purchaseHistory?.subscriptions?.[0];
+    console.log('🔍 購入履歴のサブスクリプション:', latestSubscription);
+    
     if (!latestSubscription?.purchasedAt) {
+      console.log('🔍 解約予定日計算: purchasedAtが見つかりません');
       return null;
     }
     
     const purchaseDate = new Date(latestSubscription.purchasedAt);
     const cancellationDate = new Date(purchaseDate);
     cancellationDate.setMonth(cancellationDate.getMonth() + 1);
+    
+    console.log('🔍 解約予定日計算:', {
+      purchaseDate: purchaseDate.toLocaleDateString('ja-JP'),
+      cancellationDate: cancellationDate.toLocaleDateString('ja-JP')
+    });
     
     return cancellationDate;
   };
@@ -285,7 +294,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                           userData.subscriptionStatus === 'active' ? 'アクティブ' :
                           userData.subscriptionStatus === 'cancel_at_period_end' ? 
                             cancellationDate ? 
-                              `解約予定: ${cancellationDate.toLocaleDateString('ja-JP')}` :
+                              `${cancellationDate.toLocaleDateString('ja-JP')}まで利用可能` :
                               '期間終了時に解約予定' :
                           '不明'
                         }
@@ -310,7 +319,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                   {userData.subscriptionStatus === 'cancel_at_period_end' && (
                     <div className="flex-1 bg-yellow-100 text-yellow-700 py-2 px-4 rounded-lg text-center">
                       {cancellationDate ? 
-                        `解約予定: ${cancellationDate.toLocaleDateString('ja-JP')}` :
+                        `${cancellationDate.toLocaleDateString('ja-JP')}まで利用可能` :
                         '期間終了時に解約予定'
                       }
                     </div>
