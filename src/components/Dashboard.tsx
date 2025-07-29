@@ -5,6 +5,7 @@ import { checkUsageLimit, incrementUsage, getUsageDisplayText, getUsageWarningMe
 import { saveConversation, getConversationList, getConversation, deleteConversation, ConversationHistory, ConversationTurn as HistoryConversationTurn } from '../services/conversationService';
 import { useAuth } from '../hooks/useAuth';
 import { useUserData } from '../hooks/useUserData';
+import { trackAIGeneration, trackBackgroundContextChange, trackPageView } from '../config/analytics';
 
 interface DashboardProps {
   isAuthenticated: boolean;
@@ -78,6 +79,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [isAuthenticated, authUser, refreshUserData]);
+
+  // ページビューのトラッキング
+  useEffect(() => {
+    trackPageView('AI返信作成');
+  }, []);
 
   // ユーザープロフィールが更新された時に使用回数も再取得
   useEffect(() => {
@@ -157,6 +163,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
       });
       if (response.success) {
         setCurrentReplies(response.replies);
+        // AI返信生成イベントをトラッキング
+        trackAIGeneration();
       } else {
         setCurrentReplies(response.replies);
       }
@@ -444,13 +452,17 @@ const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
             <h3 className="text-sm font-medium text-gray-700 mb-3">背景状況設定</h3>
             <div>
               <label className="block text-xs text-gray-600 mb-1">相手の雰囲気・背景状況（任意）</label>
-              <textarea
-                value={userSettings.backgroundContext}
-                onChange={(e) => setUserSettings({...userSettings, backgroundContext: e.target.value})}
-                placeholder="例: 相手はちょっとギャル系の女子でノリがいい。私から「学生？」って聞いたあとの返信だ。"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
-                rows={3}
-              />
+                              <textarea
+                  value={userSettings.backgroundContext}
+                  onChange={(e) => {
+                    setUserSettings({...userSettings, backgroundContext: e.target.value});
+                    // 背景状況設定変更イベントをトラッキング
+                    trackBackgroundContextChange();
+                  }}
+                  placeholder="例: 相手はちょっとギャル系の女子でノリがいい。私から「学生？」って聞いたあとの返信だ。"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
             </div>
           </div>
           <div className="space-y-4">

@@ -4,6 +4,7 @@ import { purchaseSubscription, cancelSubscription, subscriptionPlans, templatePa
 import { useUserData } from '../hooks/useUserData';
 import { useAuth } from '../hooks/useAuth';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { trackSubscriptionStart, trackSubscriptionCancel, trackPageView } from '../config/analytics';
 import { getAuth } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
@@ -49,6 +50,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   useEffect(() => {
     fetchPurchaseHistory();
   }, [authUser]);
+
+  // ページビューのトラッキング
+  useEffect(() => {
+    trackPageView('マイページ');
+  }, []);
 
   if (userDataLoading) {
     return (
@@ -100,6 +106,8 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
     setIsLoading(true);
     try {
       await purchaseSubscription(planId);
+      // サブスクリプション開始イベントをトラッキング
+      trackSubscriptionStart(1980, 'JPY');
     } catch (error) {
       console.error('Subscription error:', error);
       alert('サブスクリプションの処理中にエラーが発生しました。');
@@ -120,6 +128,8 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       const result = await cancelSubscription();
       console.log('✅ cancelSubscription結果:', result);
       alert('サブスクリプションを解約しました。');
+      // サブスクリプション解約イベントをトラッキング
+      trackSubscriptionCancel();
       // ユーザーデータを再取得して状態を更新
       await refreshUserData();
       // 購入履歴も再取得

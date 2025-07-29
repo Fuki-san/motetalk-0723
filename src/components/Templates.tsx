@@ -4,6 +4,7 @@ import { purchaseTemplate, checkTemplatePurchaseStatus } from '../services/strip
 import { useAuth } from '../hooks/useAuth';
 import { useUserData } from '../hooks/useUserData';
 import { templateCategories, Template, TemplateCategory } from '../data/templateData';
+import { trackPurchase, trackPageView } from '../config/analytics';
 
 const Templates = () => {
   const { user } = useAuth();
@@ -58,6 +59,11 @@ const Templates = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [user]);
 
+  // ページビューのトラッキング
+  useEffect(() => {
+    trackPageView('テンプレート一覧');
+  }, []);
+
   // 購入済みモードで選択されたカテゴリが購入済みでない場合は選択をクリア
   if (viewMode === 'purchased' && selectedCategory && !purchasedTemplates.includes(selectedCategory)) {
     setSelectedCategory('');
@@ -76,6 +82,12 @@ const Templates = () => {
       }
       
       await purchaseTemplate(categoryId);
+      
+      // 購入イベントをトラッキング
+      const category = templateCategories.find(cat => cat.id === categoryId);
+      if (category) {
+        trackPurchase(category.price, 'JPY', category.name);
+      }
       
       if (import.meta.env.DEV) {
         console.log('✅ 購入処理完了、Stripeにリダイレクト');
