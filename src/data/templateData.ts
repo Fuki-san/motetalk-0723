@@ -25,7 +25,7 @@ export const templateCategories: TemplateCategory[] = [
     name: '初回メッセージ',
     description: 'Tinder・タップル用の返信率が高い初回メッセージ15種類',
     price: 2500,
-    priceId: 'price_1Rl6WZQoDVsMq3SibYnakW14',
+    priceId: 'price_1RrXLCJrNxBDmh0MofoAqrJp',
     icon: MessageCircle,
     templates: [
       {
@@ -111,7 +111,7 @@ export const templateCategories: TemplateCategory[] = [
     name: 'デート誘い',
     description: '自然で断られにくいデート誘いメッセージ15種類',
     price: 2500,
-    priceId: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
+    priceId: 'price_1RrXKwJrNxBDmh0MG9MXSnXt',
     icon: Coffee,
     templates: [
       {
@@ -197,7 +197,7 @@ export const templateCategories: TemplateCategory[] = [
     name: '会話ネタ',
     description: '会話が続く話題とボケ例15種類',
     price: 2500,
-    priceId: 'price_1RoiuyQoDVsMq3Si9MQuzT6x',
+    priceId: 'price_1RrXLcJrNxBDmh0Ma51cHnyz',
     icon: Star,
     templates: [
       {

@@ -105,3 +105,25 @@ trackBackgroundContextChange();
 ---
 
 ## 2025-01-28: サブスクリプション解約機能の修正 
+
+# 開発計画・ログ
+
+## 2025-01-28: Stripeビジネスモード移行
+
+### 実施内容
+- **環境変数更新**: `STRIPE_WEBHOOK_SECRET`, `VITE_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`をビジネスモード用に更新
+- **Price ID更新**: テンプレート購入用のPrice IDを新しいものに更新
+  - 初回メッセージ: `price_1RrXLCJrNxBDmh0MofoAqrJp`
+  - デート誘い: `price_1RrXKwJrNxBDmh0MG9MXSnXt`
+  - 会話ネタ: `price_1RrXLcJrNxBDmh0Ma51cHnyz`
+- **ファイル更新**: `src/data/templateData.ts`, `server/utils/purchaseUtils.js`, `server/index.js`
+
+### 確認事項
+- [ ] ローカル環境での動作確認
+- [ ] Render環境での動作確認
+- [ ] Stripe Webhook URLの更新確認
+- [ ] 決済テストの実行
+
+### 次のステップ
+- Phase 2 セキュリティ実装（管理者画面）
+- Phase 3 セキュリティ実装（2FA、アカウントロック） 

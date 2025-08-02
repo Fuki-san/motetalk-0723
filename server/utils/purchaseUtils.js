@@ -29,9 +29,9 @@ function getTemplatePrice(templateId) {
  */
 function getTemplateIdFromPriceId(priceId) {
   const priceIdMap = {
-    'price_1Rl6WZQoDVsMq3SibYnakW14': 'first_message_pack',
-    'price_1Roiu5QoDVsMq3SiYXbdh2xT': 'date_invitation_pack',
-    'price_1RoiuyQoDVsMq3Si9MQuzT6x': 'conversation_topics_pack'
+      'price_1RrXLCJrNxBDmh0MofoAqrJp': 'first_message_pack',
+  'price_1RrXKwJrNxBDmh0MG9MXSnXt': 'date_invitation_pack',
+  'price_1RrXLcJrNxBDmh0Ma51cHnyz': 'conversation_topics_pack'
   };
   return priceIdMap[priceId] || null;
 }

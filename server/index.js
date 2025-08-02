@@ -429,10 +429,9 @@ app.post('/api/create-checkout-session', authenticateUser, requireAuth, async (r
       } else {
         // 従来の方法（templateIdからpriceIdを取得）
         const priceIds = {
-          first_message_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14',
-          line_transition_pack: 'price_1Rl6WZQoDVsMq3SibYnakW14',
-          date_invitation_pack: 'price_1Roiu5QoDVsMq3SiYXbdh2xT',
-          conversation_topics_pack: 'price_1RoiuyQoDVsMq3Si9MQuzT6x'
+            first_message_pack: 'price_1RrXLCJrNxBDmh0MofoAqrJp',
+  date_invitation_pack: 'price_1RrXKwJrNxBDmh0MG9MXSnXt',
+  conversation_topics_pack: 'price_1RrXLcJrNxBDmh0Ma51cHnyz'
         };
         priceIdToUse = priceIds[templateId];
         console.log('🔍 templateIdからpriceIdを取得:', templateId, '->', priceIdToUse);
