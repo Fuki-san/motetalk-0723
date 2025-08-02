@@ -8,12 +8,9 @@ import { trackSubscriptionStart, trackSubscriptionCancel, trackPageView } from '
 import { getAuth } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
-interface MyPageProps {
-  user: { name: string; email: string } | null;
-}
-
-const MyPage: React.FC<MyPageProps> = ({ user }) => {
+const MyPage: React.FC = () => {
   const { user: authUser, signOut } = useAuth();
+  const user = authUser;
   const { userProfile, loading: userDataLoading, refreshUserData } = useUserData();
   const { settings, loading: settingsLoading, saving: settingsSaving, updateNotificationSetting, updatePrivacySetting } = useUserSettings();
   const [activeTab, setActiveTab] = useState('profile');

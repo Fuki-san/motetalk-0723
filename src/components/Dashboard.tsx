@@ -7,10 +7,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useUserData } from '../hooks/useUserData';
 import { trackAIGeneration, trackBackgroundContextChange, trackPageView } from '../config/analytics';
 
-interface DashboardProps {
-  isAuthenticated: boolean;
-}
-
 interface ConversationTurn {
   id: string;
   userMessage: string;
@@ -19,8 +15,9 @@ interface ConversationTurn {
   timestamp: Date;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ isAuthenticated }) => {
+const Dashboard: React.FC = () => {
   const { user: authUser } = useAuth();
+  const isAuthenticated = !!authUser;
   const { userProfile, refreshUserData } = useUserData();
   const [inputMessage, setInputMessage] = useState('');
   const [conversation, setConversation] = useState<ConversationTurn[]>([]);

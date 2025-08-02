@@ -183,7 +183,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://js.stripe.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.stripe.com", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://www.google-analytics.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://www.google-analytics.com", "https://securetoken.googleapis.com", "https://firestore.googleapis.com"],
       frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
