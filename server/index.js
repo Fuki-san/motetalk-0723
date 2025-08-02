@@ -180,10 +180,10 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://js.stripe.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.stripe.com", "https://generativelanguage.googleapis.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://www.google-analytics.com"],
       frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
